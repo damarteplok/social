@@ -1,6 +1,7 @@
 include .env
 MIGRATION_PATH = ./cmd/migrate/migrations
 
+.PHONY: run-air
 run:
 	@air
 
@@ -15,3 +16,12 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@migrate -path=$(MIGRATION_PATH) -database=$(DB_ADDR) down
+
+.PHONY: sonar-scan
+sonar-scan:
+	@${PATH_SONAR_SCAN} -X \
+		-Dsonar.organization=${SONAR_ORGANIZATION} \
+		-Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+		-Dsonar.sources=${SONAR_SOURCES} \
+		-Dsonar.login=${SONAR_TOKEN} \
+		-Dsonar.host.url=${SONAR_HOST}
