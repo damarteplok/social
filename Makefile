@@ -25,3 +25,7 @@ sonar-scan:
 		-Dsonar.sources=${SONAR_SOURCES} \
 		-Dsonar.login=${SONAR_TOKEN} \
 		-Dsonar.host.url=${SONAR_HOST}
+
+.PHONY: seed
+seed:
+	@go run cmd/migrate/seed/main.go
