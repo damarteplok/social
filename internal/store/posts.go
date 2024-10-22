@@ -3,9 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
-
-	"github.com/lib/pq"
 )
 
 type Post struct {
@@ -30,7 +29,20 @@ type PostStore struct {
 	db *sql.DB
 }
 
-func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]PostWithMetadata, error) {
+	sortOrder := "DESC"
+	if fq.Sort == "desc" || fq.Sort == "DESC" {
+		sortOrder = "DESC"
+	}
+	if fq.Sort == "asc" || fq.Sort == "ASC" {
+		sortOrder = "ASC"
+	}
+
+	jsonTags, err := json.Marshal(fq.Tags)
+	if err != nil {
+		return nil, err
+	}
+
 	query := `
 		SELECT 
 			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
@@ -40,15 +52,19 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON p.user_id = u.id
 		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-		WHERE f.user_id = $1 OR p.user_id = $1
+		WHERE 
+			(f.user_id = $1 OR p.user_id = $1) AND
+			(p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%') AND
+			(p.tags @> $5::jsonb OR $5::jsonb = '[]')
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at DESC;
+		ORDER BY p.created_at ` + sortOrder + `
+		LIMIT $2 OFFSET $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset, fq.Search, jsonTags)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +73,7 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 	var feed []PostWithMetadata
 	for rows.Next() {
 		var p PostWithMetadata
+		var tagsData []byte
 		err := rows.Scan(
 			&p.ID,
 			&p.UserID,
@@ -64,12 +81,19 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 			&p.Content,
 			&p.CreatedAt,
 			&p.Version,
-			pq.Array(&p.Tags),
+			&tagsData,
 			&p.User.Username,
 			&p.CommentCount,
 		)
 		if err != nil {
 			return nil, err
+		}
+		if len(tagsData) > 0 {
+			if err := json.Unmarshal(tagsData, &p.Tags); err != nil {
+				return nil, err
+			}
+		} else {
+			p.Tags = []string{}
 		}
 		feed = append(feed, p)
 	}
@@ -77,6 +101,15 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 }
 
 func (s *PostStore) Create(ctx context.Context, post *Post) error {
+	if post.Tags == nil {
+		post.Tags = []string{}
+	}
+
+	tagsJSON, errTags := json.Marshal(post.Tags)
+	if errTags != nil {
+		return errTags
+	}
+
 	query := `
 		INSERT INTO posts (content, title, user_id, tags)
 		VALUES ($1,$2, $3, $4) RETURNING id, created_at, updated_at;
@@ -91,7 +124,7 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 		post.Content,
 		post.Title,
 		post.UserID,
-		pq.Array(post.Tags),
+		tagsJSON,
 	).Scan(
 		&post.ID,
 		&post.CreatedAt,
@@ -115,6 +148,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	defer cancel()
 
 	var post Post
+	var tagsData []byte
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&post.ID,
 		&post.UserID,
@@ -123,7 +157,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		&post.CreatedAt,
 		&post.UpdatedAt,
 		&post.Version,
-		pq.Array(&post.Tags),
+		&tagsData,
 	)
 	if err != nil {
 		switch {
@@ -132,6 +166,13 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		default:
 			return nil, err
 		}
+	}
+	if len(tagsData) > 0 {
+		if err := json.Unmarshal(tagsData, &post.Tags); err != nil {
+			return nil, err
+		}
+	} else {
+		post.Tags = []string{}
 	}
 	return &post, nil
 }
