@@ -15,6 +15,7 @@ type Config struct {
 	MaxIdleConns int
 	MaxIdleTime  string
 	ENV          string
+	ApiUrl       string
 }
 
 var Envs = initConfig()
@@ -32,6 +33,7 @@ func initConfig() Config {
 		MaxIdleConns: GetInt("DB_MAX_IDLE_CONNS", 30),
 		MaxIdleTime:  GetString("DB_MAX_IDLE_TIME", "15m"),
 		ENV:          GetString("ENV", "development"),
+		ApiUrl:       GetString("EXTERNAL_URL", "localhost:8080"),
 	}
 }
 
