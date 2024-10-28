@@ -18,6 +18,10 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
+func (app *application) getUserAllHandler(w http.ResponseWriter, r *http.Request) {
+	writeJSONError(w, http.StatusNotFound, "not found")
+}
+
 // GetUser godoc
 //
 //	@Summary		Fetches a user profile

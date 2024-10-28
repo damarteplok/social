@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/damarteplok/social/internal/db"
 	"github.com/damarteplok/social/internal/env"
 	"github.com/damarteplok/social/internal/store"
@@ -37,6 +39,9 @@ func main() {
 		},
 		env:    env.Envs.ENV,
 		apiURL: env.Envs.ApiUrl,
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+		},
 	}
 
 	// Logger
