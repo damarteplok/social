@@ -5,6 +5,7 @@ import (
 
 	"github.com/damarteplok/social/internal/db"
 	"github.com/damarteplok/social/internal/env"
+	"github.com/damarteplok/social/internal/mailer"
 	"github.com/damarteplok/social/internal/store"
 	"go.uber.org/zap"
 )
@@ -30,7 +31,8 @@ const version = "0.0.1"
 // @description
 func main() {
 	cfg := config{
-		addr: env.Envs.Addr,
+		addr:        env.Envs.Addr,
+		frontendURL: env.Envs.FrontendURL,
 		db: dbConfig{
 			addr:         env.Envs.DbAddr,
 			maxOpenConns: env.Envs.MaxOpenConns,
@@ -40,7 +42,17 @@ func main() {
 		env:    env.Envs.ENV,
 		apiURL: env.Envs.ApiUrl,
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3,
+			exp:       time.Hour * 24 * 3,
+			fromEmail: env.Envs.MailerFromEmail,
+			sendgrid: sendGridConfig{
+				apiKey: env.Envs.MailerApiKey,
+			},
+		},
+		camunda: camundaConfig{
+			zeebeAddr:          env.Envs.ZeebeAddr,
+			zeebeClientId:      env.Envs.ZeebeClientID,
+			zeebeClientSecret:  env.Envs.ZeebeClientSecret,
+			zeebeAuthServerUrl: env.Envs.ZeebeAuthServerUrl,
 		},
 	}
 
@@ -63,10 +75,13 @@ func main() {
 
 	store := store.NewStorage(db)
 
+	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := app.mount()

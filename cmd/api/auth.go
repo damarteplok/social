@@ -3,9 +3,11 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/damarteplok/social/internal/mailer"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/google/uuid"
 )
@@ -16,6 +18,11 @@ type RegisterUserPayload struct {
 	Password string `json:"password" validate:"required,min=3,max=72"`
 }
 
+type UserWithToken struct {
+	*store.User
+	Token string `json:"token"`
+}
+
 // registerUserHandler godoc
 //
 //	@Summary		Register a user
@@ -24,7 +31,7 @@ type RegisterUserPayload struct {
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		RegisterUserPayload	true	"User credentials"
-//	@Success		201		{object}	store.User			"User registered"
+//	@Success		201		{object}	UserWithToken		"User registered"
 //	@Failure		400		{object}	error
 //	@Failure		404		{object}	error
 //	@Failure		500		{object}	error
@@ -72,9 +79,36 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-	// mail
 
-	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
+	userWithToken := UserWithToken{
+		User:  user,
+		Token: plainToken,
+	}
+
+	activationURL := fmt.Sprintf("%s/confirm/%s", app.config.frontendURL, plainToken)
+
+	isProdEnv := app.config.env == "production"
+	vars := struct {
+		Username      string
+		ActivationURL string
+	}{
+		Username:      user.Username,
+		ActivationURL: activationURL,
+	}
+
+	// send mail
+	err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv)
+	if err != nil {
+		app.logger.Errorw("error sending welcome email", "error", err)
+		// rollback user creation if email fails
+		if err := app.store.Users.Delete(ctx, user.ID); err != nil {
+			app.logger.Errorw("error deleting user", "error", err)
+		}
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, userWithToken); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

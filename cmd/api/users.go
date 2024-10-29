@@ -18,6 +18,39 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
+type DataStoreUserWrapper struct {
+	Data store.User `json:"data"`
+}
+
+// ActivateUser godoc
+//
+//	@Summary		Activate a user
+//	@Description	Activate a user
+//	@Tags			users
+//	@produce		json
+//	@Param			token	path		string	true	"Invitation token"
+//	@Success		204		{string}	string	"User activated"
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/users/activate/{token}  [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	err := app.store.Users.Activate(r.Context(), token)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
 func (app *application) getUserAllHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSONError(w, http.StatusNotFound, "not found")
 }
@@ -30,7 +63,7 @@ func (app *application) getUserAllHandler(w http.ResponseWriter, r *http.Request
 //	@Accept			json
 //	@produce		json
 //	@Param			id	path		int	true	"User ID"
-//	@Success		200	{object}	store.User
+//	@Success		200	{object}	DataStoreUserWrapper
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error
 //	@Failure		500	{object}	error

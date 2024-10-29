@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/damarteplok/social/docs"
+	"github.com/damarteplok/social/internal/mailer"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,14 +18,17 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
-	addr   string
-	db     dbConfig
-	env    string
-	apiURL string
-	mail   mailConfig
+	addr        string
+	db          dbConfig
+	env         string
+	apiURL      string
+	mail        mailConfig
+	camunda     camundaConfig
+	frontendURL string
 }
 
 type dbConfig struct {
@@ -35,7 +39,20 @@ type dbConfig struct {
 }
 
 type mailConfig struct {
-	exp time.Duration
+	sendgrid  sendGridConfig
+	exp       time.Duration
+	fromEmail string
+}
+
+type camundaConfig struct {
+	zeebeAddr          string
+	zeebeClientId      string
+	zeebeClientSecret  string
+	zeebeAuthServerUrl string
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 
 func (app *application) mount() http.Handler {
@@ -67,6 +84,7 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/users", func(r chi.Router) {
 			r.Get("/", app.getUserAllHandler)
+			r.Put("/activate/{token}", app.activateUserHandler)
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.userContextMiddleware)
 				r.Get("/", app.getUserHandler)

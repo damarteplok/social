@@ -1,0 +1,15 @@
+{{define "subject"}}Finish Registration with GopherSocial{{end}}
+
+{{define "Body"}}
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    </head>
+    <body>
+        <p>Hi {{.Username}}</p>
+        <p><a href="{{.ActivationURL}}">{{.ActivationURL}}</a></p>
+    </body>
+</html>
+{{end}}

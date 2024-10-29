@@ -25,6 +25,22 @@ type UpdatePostPayload struct {
 	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
 
+type DataStorePostWrapper struct {
+	Data store.Post `json:"data"`
+}
+
+// Create POST godoc
+//
+//	@Summary		Create Post
+//	@Description	Create Post
+//	@Tags			posts
+//	@Accept			json
+//	@produce		json
+//	@Param			payload	body		CreatePostPayload		true	"Post Payload"
+//	@Success		201		{object}	DataStorePostWrapper	"Post Created"
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/posts  [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 	if err := readJSON(w, r, &payload); err != nil {

@@ -12,6 +12,11 @@ require (
 )
 
 require (
+	github.com/camunda-community-hub/zeebe-client-go/v8 v8.6.0 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
+)
+
+require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -24,6 +29,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0

@@ -1,5 +1,31 @@
 basePath: /v1
 definitions:
+  main.CreatePostPayload:
+    properties:
+      content:
+        maxLength: 1000
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 100
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  main.DataStorePostWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/store.Post'
+    type: object
+  main.DataStoreUserWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/store.User'
+    type: object
   main.HealthResponse:
     properties:
       env:
@@ -26,6 +52,63 @@ definitions:
     - password
     - username
     type: object
+  main.UserWithToken:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+  store.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      user:
+        $ref: '#/definitions/store.User'
+      user_id:
+        type: integer
+    type: object
+  store.Post:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/store.Comment'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/store.User'
+      user_id:
+        type: integer
+      version:
+        type: integer
+    type: object
   store.User:
     properties:
       created_at:
@@ -34,6 +117,8 @@ definitions:
         type: string
       id:
         type: integer
+      is_active:
+        type: boolean
       username:
         type: string
     type: object
@@ -67,7 +152,7 @@ paths:
         "201":
           description: User registered
           schema:
-            $ref: '#/definitions/store.User'
+            $ref: '#/definitions/main.UserWithToken'
         "400":
           description: Bad Request
           schema: {}
@@ -106,6 +191,34 @@ paths:
       summary: Fetches health status api
       tags:
       - health
+  /posts:
+    post:
+      consumes:
+      - application/json
+      description: Create Post
+      parameters:
+      - description: Post Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Post Created
+          schema:
+            $ref: '#/definitions/main.DataStorePostWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Create Post
+      tags:
+      - posts
   /users/{id}:
     get:
       consumes:
@@ -123,7 +236,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/store.User'
+            $ref: '#/definitions/main.DataStoreUserWrapper'
         "400":
           description: Bad Request
           schema: {}
@@ -194,6 +307,31 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: UnFollow a user
+      tags:
+      - users
+  /users/activate/{token}:
+    put:
+      description: Activate a user
+      parameters:
+      - description: Invitation token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User activated
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Activate a user
       tags:
       - users
 securityDefinitions:
