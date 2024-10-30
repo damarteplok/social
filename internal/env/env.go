@@ -44,7 +44,7 @@ func initConfig() Config {
 		ZeebeClientID:      GetString("ZEEBE_CLIENT_ID", "localhost:8080"),
 		ZeebeClientSecret:  GetString("ZEEBE_CLIENT_SECRET", "localhost:8080"),
 		ZeebeAuthServerUrl: GetString("ZEEBE_AUTH_SERVER_URL", "localhost:8080"),
-		FrontendURL:        GetString("FRONTEND_URL", "http://localhost:4000"),
+		FrontendURL:        GetString("FRONTEND_URL", "http://localhost:5173"),
 		MailerFromEmail:    GetString("MAILIER_FROM_EMAIL", "damar@test.com"),
 		MailerApiKey:       GetString("MAILIER_API_KEY", ""),
 	}
