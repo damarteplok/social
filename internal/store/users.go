@@ -35,6 +35,10 @@ func (p *password) Set(text string) error {
 	return nil
 }
 
+func (p *password) Check(input string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(input))
+}
+
 type UserStore struct {
 	db *sql.DB
 }
@@ -101,7 +105,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	return user, nil
 }
 
-func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+func (s *UserStore) GetByEmailAndPassword(ctx context.Context, email, password string) (*User, error) {
 	query := `
 		SELECT id, username, email, password, created_at FROM users WHERE email = $1 AND is_active = true;
 	`
@@ -125,6 +129,9 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		default:
 			return nil, err
 		}
+	}
+	if err := user.Password.Check(password); err != nil {
+		return nil, err
 	}
 
 	return user, nil

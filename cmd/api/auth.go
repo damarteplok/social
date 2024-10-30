@@ -145,7 +145,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	// TODO: password validation
-	user, err := app.store.Users.GetByEmail(r.Context(), payload.Email)
+	user, err := app.store.Users.GetByEmailAndPassword(r.Context(), payload.Email, payload.Password)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
