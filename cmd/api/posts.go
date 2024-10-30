@@ -115,7 +115,7 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@produce		json
 //	@Param			postID	path		int	true	"Post ID"
-//	@Success		201		{string}	string
+//	@Success		204		{string}	string
 //	@Failure		400		{object}	error
 //	@Failure		404		{object}	error	"post not found"
 //	@Failure		500		{object}	error
@@ -150,8 +150,9 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 //	@Tags			posts
 //	@Accept			json
 //	@produce		json
-//	@Param			postID	path		int	true	"Post ID"
-//	@Success		201		{string}	string
+//	@Param			postID	path		int					true	"Post ID"
+//	@Param			payload	body		UpdatePostPayload	true	"Post payload"
+//	@Success		200		{object}	store.Post
 //	@Failure		400		{object}	error
 //	@Failure		404		{object}	error	"post not found"
 //	@Failure		500		{object}	error

@@ -57,6 +57,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	user := &store.User{
 		Username: payload.Username,
 		Email:    payload.Email,
+		Role: store.Role{
+			Name: "user",
+		},
 	}
 	// hash the user password
 	if err := user.Password.Set(payload.Password); err != nil {
@@ -144,7 +147,6 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	// TODO: password validation
 	user, err := app.store.Users.GetByEmailAndPassword(r.Context(), payload.Email, payload.Password)
 	if err != nil {
 		switch err {
