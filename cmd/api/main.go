@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/damarteplok/social/internal/auth"
 	"github.com/damarteplok/social/internal/db"
 	"github.com/damarteplok/social/internal/env"
 	"github.com/damarteplok/social/internal/mailer"
@@ -48,6 +49,17 @@ func main() {
 				apiKey: env.Envs.MailerApiKey,
 			},
 		},
+		auth: authConfig{
+			basic: basicConfig{
+				user: env.Envs.AdminUser,
+				pass: env.Envs.AdminPass,
+			},
+			token: tokenConfig{
+				secret: env.Envs.JwtSecret,
+				exp:    time.Hour * 24 * 3,
+				iss:    env.Envs.JwtIss,
+			},
+		},
 		camunda: camundaConfig{
 			zeebeAddr:          env.Envs.ZeebeAddr,
 			zeebeClientId:      env.Envs.ZeebeClientID,
@@ -77,11 +89,18 @@ func main() {
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		cfg.auth.token.secret,
+		cfg.auth.token.iss,
+		cfg.auth.token.iss,
+	)
+
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

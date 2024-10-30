@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/damarteplok/social/docs"
+	"github.com/damarteplok/social/internal/auth"
 	"github.com/damarteplok/social/internal/mailer"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -16,10 +17,11 @@ import (
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -30,6 +32,7 @@ type config struct {
 	mail        mailConfig
 	camunda     camundaConfig
 	frontendURL string
+	auth        authConfig
 }
 
 type dbConfig struct {
@@ -56,6 +59,22 @@ type sendGridConfig struct {
 	apiKey string
 }
 
+type authConfig struct {
+	basic basicConfig
+	token tokenConfig
+}
+
+type basicConfig struct {
+	user string
+	pass string
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
+}
+
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
@@ -80,12 +99,14 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", app.healthCheckHandler)
+		r.With(app.BasicAuthMiddleware()).
+			Get("/health", app.healthCheckHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
 
 			r.Route("/{postID}", func(r chi.Router) {
@@ -97,22 +118,25 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			r.Get("/", app.getUserAllHandler)
 			r.Put("/activate/{token}", app.activateUserHandler)
+
+			r.Get("/", app.getUserAllHandler)
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.userContextMiddleware)
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/", app.getUserHandler)
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)
 			})
 
 			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
 				r.Get("/feed", app.getUserFeedHandler)
 			})
 		})
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 	})
 

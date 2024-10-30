@@ -21,7 +21,7 @@ type HealthResponse struct {
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error
 //	@Failure		500	{object}	error
-//	@Security		ApiKeyAuth
+//	@Security		BasicAuth
 //	@Router			/health  [get]
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	data := HealthResponse{

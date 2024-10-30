@@ -40,6 +40,7 @@ type DataStorePostWrapper struct {
 //	@Success		201		{object}	DataStorePostWrapper	"Post Created"
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
 //	@Router			/posts  [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
@@ -52,11 +53,14 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestResponse(w, r, err)
 		return
 	}
+
+	user := getUserFromContext(r)
+
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-		UserID:  1,
+		UserID:  user.ID,
 	}
 
 	ctx := r.Context()
@@ -72,6 +76,20 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// Get By ID POST godoc
+//
+//	@Summary		GET Post By ID
+//	@Description	GET Post By ID
+//	@Tags			posts
+//	@Accept			json
+//	@produce		json
+//	@Param			postID	path		int			true	"Post ID"
+//	@Success		201		{object}	store.Post	"Post Created"
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error	"post not found"
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}  [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
@@ -89,6 +107,20 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Delete By ID POST godoc
+//
+//	@Summary		DELETE Post By ID
+//	@Description	DELETE Post By ID
+//	@Tags			posts
+//	@Accept			json
+//	@produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		201		{string}	string
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error	"post not found"
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}  [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "postID")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -111,6 +143,20 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// PATCH By ID POST godoc
+//
+//	@Summary		PATCH Post By ID
+//	@Description	PATCH Post By ID
+//	@Tags			posts
+//	@Accept			json
+//	@produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		201		{string}	string
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error	"post not found"
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}  [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 

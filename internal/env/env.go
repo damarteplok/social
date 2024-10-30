@@ -23,6 +23,10 @@ type Config struct {
 	FrontendURL        string
 	MailerFromEmail    string
 	MailerApiKey       string
+	AdminUser          string
+	AdminPass          string
+	JwtSecret          string
+	JwtIss             string
 }
 
 var Envs = initConfig()
@@ -47,6 +51,10 @@ func initConfig() Config {
 		FrontendURL:        GetString("FRONTEND_URL", "http://localhost:5173"),
 		MailerFromEmail:    GetString("MAILIER_FROM_EMAIL", "damar@test.com"),
 		MailerApiKey:       GetString("MAILIER_API_KEY", ""),
+		AdminUser:          GetString("ADMIN_USER", "admin"),
+		AdminPass:          GetString("ADMIN_PASS", "admin"),
+		JwtSecret:          GetString("JWT_SECRET", "admin"),
+		JwtIss:             GetString("JWT_ISS", "damar"),
 	}
 }
 
