@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/camunda-community-hub/zeebe-client-go/v8 v8.6.0 // indirect
+	github.com/go-chi/cors v1.2.1 // indirect
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 )
 
