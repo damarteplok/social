@@ -27,6 +27,10 @@ type Config struct {
 	AdminPass          string
 	JwtSecret          string
 	JwtIss             string
+	RedisAddr          string
+	RedisPass          string
+	RedisDB            int
+	RedisEnabled       bool
 }
 
 var Envs = initConfig()
@@ -55,6 +59,10 @@ func initConfig() Config {
 		AdminPass:          GetString("ADMIN_PASS", "admin"),
 		JwtSecret:          GetString("JWT_SECRET", "admin"),
 		JwtIss:             GetString("JWT_ISS", "damar"),
+		RedisAddr:          GetString("REDIS_ADDR", "localhost:6379"),
+		RedisPass:          GetString("REDIS_PASS", "localhost:6379"),
+		RedisDB:            GetInt("REDIS_DB", 0),
+		RedisEnabled:       GetBool("REDIS_ENABLED", false),
 	}
 }
 
@@ -79,4 +87,18 @@ func GetInt(key string, fallback int) int {
 	}
 
 	return valAsInt
+}
+
+func GetBool(key string, fallback bool) bool {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return fallback
+	}
+
+	valAsBool, err := strconv.ParseBool(val)
+	if err != nil {
+		return fallback
+	}
+
+	return valAsBool
 }

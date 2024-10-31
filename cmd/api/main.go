@@ -8,6 +8,8 @@ import (
 	"github.com/damarteplok/social/internal/env"
 	"github.com/damarteplok/social/internal/mailer"
 	"github.com/damarteplok/social/internal/store"
+	"github.com/damarteplok/social/internal/store/cache"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
@@ -39,6 +41,12 @@ func main() {
 			maxOpenConns: env.Envs.MaxOpenConns,
 			maxIdleConns: env.Envs.MaxIdleConns,
 			maxIdleTime:  env.Envs.MaxIdleTime,
+		},
+		redisCfg: redisConfig{
+			addr:    env.Envs.RedisAddr,
+			pw:      env.Envs.RedisPass,
+			db:      env.Envs.RedisDB,
+			enabled: env.Envs.RedisEnabled,
 		},
 		env:    env.Envs.ENV,
 		apiURL: env.Envs.ApiUrl,
@@ -85,7 +93,15 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	// Cache
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis cache connection established")
+	}
+
 	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
@@ -98,6 +114,7 @@ func main() {
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cacheStorage:  cacheStorage,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
