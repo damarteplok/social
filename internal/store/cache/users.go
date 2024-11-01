@@ -48,6 +48,6 @@ func (s *UsersStore) Set(ctx context.Context, user *store.User) error {
 }
 
 func (s *UsersStore) Delete(ctx context.Context, userID int64) {
-	cacheKey := fmt.Sprint("user-%d", userID)
+	cacheKey := fmt.Sprintf("user-%d", userID)
 	s.rdb.Del(ctx, cacheKey)
 }
