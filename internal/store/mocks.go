@@ -8,11 +8,15 @@ import (
 
 func NewMockStore() Storage {
 	return Storage{
-		Users: &MockUserStore{},
+		Users: &MockUserStore{
+			users: []User{},
+		},
 	}
 }
 
-type MockUserStore struct{}
+type MockUserStore struct {
+	users []User
+}
 
 func (m *MockUserStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 	return nil
