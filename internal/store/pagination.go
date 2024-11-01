@@ -12,7 +12,7 @@ type PaginatedFeedQuery struct {
 	Offset int      `json:"offset" validate:"gte=0"`
 	Sort   string   `json:"sort" validate:"oneof=asc desc"`
 	Tags   []string `json:"tags" validate:"max=5"`
-	Search string   `json:"tags" validate:"max=100"`
+	Search string   `json:"search" validate:"max=100"`
 	Since  string   `json:"since"`
 	Until  string   `json:"until"`
 }
