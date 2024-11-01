@@ -7,6 +7,7 @@ import (
 	"github.com/damarteplok/social/internal/db"
 	"github.com/damarteplok/social/internal/env"
 	"github.com/damarteplok/social/internal/mailer"
+	"github.com/damarteplok/social/internal/ratelimiter"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/damarteplok/social/internal/store/cache"
 	"github.com/go-redis/redis/v8"
@@ -74,6 +75,11 @@ func main() {
 			zeebeClientSecret:  env.Envs.ZeebeClientSecret,
 			zeebeAuthServerUrl: env.Envs.ZeebeAuthServerUrl,
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: 20,
+			TimeFrame:           time.Second * 5,
+			Enabled:             true,
+		},
 	}
 
 	// Logger
@@ -100,6 +106,11 @@ func main() {
 		logger.Info("redis cache connection established")
 	}
 
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
 
@@ -118,6 +129,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   rateLimiter,
 	}
 
 	mux := app.mount()

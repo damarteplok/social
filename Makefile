@@ -1,5 +1,8 @@
 include .env
 MIGRATION_PATH = ./cmd/migrate/migrations
+autocannon: R ?= 4000
+autocannon: D ?= 2
+autocannon: C ?= 10
 
 .PHONY: run-air
 run:
@@ -37,3 +40,7 @@ seed:
 .PHONY: gen-docs
 gen-docs:
 	@swag init -g ./api/main.go -d cmd,internal && swag fmt
+
+.PHONY: test-autocannon
+autocannon:
+	@npx autocannon -r $(R) -d $(D) -c $(C) --renderStatusCodes $(filter-out $@,$(MAKECMDGOALS))
