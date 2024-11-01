@@ -36,9 +36,14 @@ type Config struct {
 var Envs = initConfig()
 
 func initConfig() Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file")
+	// }
+	if os.Getenv("ENV") != "test" {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, continuing without it.")
+		}
 	}
 
 	return Config{
@@ -60,7 +65,7 @@ func initConfig() Config {
 		JwtSecret:          GetString("JWT_SECRET", "admin"),
 		JwtIss:             GetString("JWT_ISS", "damar"),
 		RedisAddr:          GetString("REDIS_ADDR", "localhost:6379"),
-		RedisPass:          GetString("REDIS_PASS", "localhost:6379"),
+		RedisPass:          GetString("REDIS_PASS", ""),
 		RedisDB:            GetInt("REDIS_DB", 0),
 		RedisEnabled:       GetBool("REDIS_ENABLED", false),
 	}
