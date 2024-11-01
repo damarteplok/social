@@ -31,6 +31,7 @@ type Config struct {
 	RedisPass          string
 	RedisDB            int
 	RedisEnabled       bool
+	AllowedOrigin      string
 }
 
 var Envs = initConfig()
@@ -68,6 +69,7 @@ func initConfig() Config {
 		RedisPass:          GetString("REDIS_PASS", ""),
 		RedisDB:            GetInt("REDIS_DB", 0),
 		RedisEnabled:       GetBool("REDIS_ENABLED", false),
+		AllowedOrigin:      GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5174"),
 	}
 }
 
