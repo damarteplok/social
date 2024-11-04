@@ -3,7 +3,6 @@ package main
 import (
 	"expvar"
 	"runtime"
-	"time"
 
 	"github.com/damarteplok/social/internal/auth"
 	"github.com/damarteplok/social/internal/db"
@@ -12,14 +11,15 @@ import (
 	"github.com/damarteplok/social/internal/ratelimiter"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/damarteplok/social/internal/store/cache"
+	"github.com/damarteplok/social/internal/zeebe"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
 const version = "0.0.1"
 
-//	@title			GopherSocial API
-//	@description	API for GopherSocial, a social network for gohpers
+//	@title			damarmunda API
+//	@description	API for damarmunda, a camunda golang
 //	@termsOfService	http://swagger.io/terms/
 
 //	@contact.name	API Support
@@ -54,7 +54,7 @@ func main() {
 		env:    env.Envs.ENV,
 		apiURL: env.Envs.ApiUrl,
 		mail: mailConfig{
-			exp:       time.Hour * 24 * 3,
+			exp:       env.Envs.MailerExp,
 			fromEmail: env.Envs.MailerFromEmail,
 			sendgrid: sendGridConfig{
 				apiKey: env.Envs.MailerApiKey,
@@ -67,7 +67,7 @@ func main() {
 			},
 			token: tokenConfig{
 				secret: env.Envs.JwtSecret,
-				exp:    time.Hour * 24 * 3,
+				exp:    env.Envs.JwtExp,
 				iss:    env.Envs.JwtIss,
 			},
 		},
@@ -78,9 +78,9 @@ func main() {
 			zeebeAuthServerUrl: env.Envs.ZeebeAuthServerUrl,
 		},
 		rateLimiter: ratelimiter.Config{
-			RequestPerTimeFrame: 20,
-			TimeFrame:           time.Second * 5,
-			Enabled:             true,
+			RequestPerTimeFrame: env.Envs.RequestPerTimeFrame,
+			TimeFrame:           env.Envs.RateLimiterTimeFrame,
+			Enabled:             env.Envs.RateLimiterEnabled,
 		},
 	}
 
@@ -108,14 +108,13 @@ func main() {
 		logger.Info("redis cache connection established")
 	}
 
+	// Rate Limiter
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
 		cfg.rateLimiter.RequestPerTimeFrame,
 		cfg.rateLimiter.TimeFrame,
 	)
 
-	store := store.NewStorage(db)
-	cacheStorage := cache.NewRedisStorage(rdb)
-
+	// Mailer
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 
 	jwtAuthenticator := auth.NewJWTAuthenticator(
@@ -123,6 +122,21 @@ func main() {
 		cfg.auth.token.iss,
 		cfg.auth.token.iss,
 	)
+
+	// zeebe
+	zeebeClient, err := zeebe.NewZeebeClient(
+		cfg.camunda.zeebeClientId,
+		cfg.camunda.zeebeClientSecret,
+		cfg.camunda.zeebeAuthServerUrl,
+		cfg.camunda.zeebeAddr,
+	)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer zeebeClient.Close()
+
+	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	app := &application{
 		config:        cfg,
@@ -132,6 +146,7 @@ func main() {
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
 		rateLimiter:   rateLimiter,
+		zeebeClient:   zeebeClient,
 	}
 
 	// Metrics Collected

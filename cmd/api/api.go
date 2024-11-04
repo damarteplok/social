@@ -18,6 +18,7 @@ import (
 	"github.com/damarteplok/social/internal/ratelimiter"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/damarteplok/social/internal/store/cache"
+	"github.com/damarteplok/social/internal/zeebe"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -33,6 +34,7 @@ type application struct {
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	rateLimiter   ratelimiter.Limiter
+	zeebeClient   zeebe.ZeebeCamunda
 }
 
 type config struct {
@@ -103,12 +105,8 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// Basic CORS
-	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
 	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins: []string{"https://*", "http://*"},
-		AllowedOrigins: []string{env.Envs.AllowedOrigin},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedOrigins:   env.Envs.AllowedOrigin,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -156,6 +154,13 @@ func (app *application) mount() http.Handler {
 				r.Get("/feed", app.getUserFeedHandler)
 			})
 		})
+
+		r.With(app.BasicAuthMiddleware()).Route("/camunda", func(r chi.Router) {
+			r.Post("/deploy", app.deployOnlyCamundaHandler)
+			r.Post("/crud", app.crudCamundaHandler)
+			r.Post("/deploy-crud", app.deployCamundaHandler)
+		})
+
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)

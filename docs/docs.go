@@ -116,6 +116,194 @@ const docTemplate = `{
                 }
             }
         },
+        "/camunda/crud": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "CRUD Store And Handler from Payload",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "CRUD Store And Handler",
+                "parameters": [
+                    {
+                        "description": "Crud Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CrudPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/deploy": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Deploy Only Bpmn Camunda by Name In Folder Resources",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Deploy Only Bpmn Camunda",
+                "parameters": [
+                    {
+                        "description": "Deploy Bpmn Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.DeployBpmnPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/deploy-crud": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Deploy Bpmn Camunda by Name In Folder Resources And Create CRUD in Store And Handler File",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Deploy Bpmn Camunda",
+                "parameters": [
+                    {
+                        "description": "Deploy Bpmn Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.DeployBpmnPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/pesen_ke_warung_makan": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create PesenKeWarungMakan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Create PesenKeWarungMakan",
+                "parameters": [
+                    {
+                        "description": "PesenKeWarungMakan Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreatePesenKeWarungMakanPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "PesenKeWarungMakan Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStorePesenKeWarungMakanWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "security": [
@@ -533,6 +721,9 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "main.CreatePesenKeWarungMakanPayload": {
+            "type": "object"
+        },
         "main.CreatePostPayload": {
             "type": "object",
             "required": [
@@ -574,6 +765,39 @@ const docTemplate = `{
                 }
             }
         },
+        "main.CrudPayload": {
+            "type": "object",
+            "required": [
+                "process_definition_key",
+                "process_name",
+                "resource_name",
+                "version"
+            ],
+            "properties": {
+                "process_definition_key": {
+                    "type": "integer"
+                },
+                "process_name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "resource_name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.DataStorePesenKeWarungMakanWrapper": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/store.PesenKeWarungMakan"
+                }
+            }
+        },
         "main.DataStorePostWrapper": {
             "type": "object",
             "properties": {
@@ -587,6 +811,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/store.User"
+                }
+            }
+        },
+        "main.DeployBpmnPayload": {
+            "type": "object",
+            "required": [
+                "resource_name"
+            ],
+            "properties": {
+                "resource_name": {
+                    "type": "string"
                 }
             }
         },
@@ -692,6 +927,29 @@ const docTemplate = `{
                 }
             }
         },
+        "store.PesenKeWarungMakan": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "type": "integer"
+                },
+                "resource_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
         "store.Post": {
             "type": "object",
             "properties": {
@@ -792,8 +1050,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "GopherSocial API",
-	Description:      "API for GopherSocial, a social network for gohpers",
+	Title:            "damarmunda API",
+	Description:      "API for damarmunda, a camunda golang",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

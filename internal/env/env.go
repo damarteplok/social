@@ -4,43 +4,46 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Addr               string
-	DbAddr             string
-	MaxOpenConns       int
-	MaxIdleConns       int
-	MaxIdleTime        string
-	ENV                string
-	ApiUrl             string
-	ZeebeAddr          string
-	ZeebeClientID      string
-	ZeebeClientSecret  string
-	ZeebeAuthServerUrl string
-	FrontendURL        string
-	MailerFromEmail    string
-	MailerApiKey       string
-	AdminUser          string
-	AdminPass          string
-	JwtSecret          string
-	JwtIss             string
-	RedisAddr          string
-	RedisPass          string
-	RedisDB            int
-	RedisEnabled       bool
-	AllowedOrigin      string
+	Addr                 string
+	DbAddr               string
+	MaxOpenConns         int
+	MaxIdleConns         int
+	MaxIdleTime          string
+	ENV                  string
+	ApiUrl               string
+	ZeebeAddr            string
+	ZeebeClientID        string
+	ZeebeClientSecret    string
+	ZeebeAuthServerUrl   string
+	FrontendURL          string
+	MailerFromEmail      string
+	MailerApiKey         string
+	MailerExp            time.Duration
+	AdminUser            string
+	AdminPass            string
+	JwtSecret            string
+	JwtIss               string
+	JwtExp               time.Duration
+	RedisAddr            string
+	RedisPass            string
+	RedisDB              int
+	RedisEnabled         bool
+	AllowedOrigin        []string
+	RequestPerTimeFrame  int
+	RateLimiterEnabled   bool
+	RateLimiterTimeFrame time.Duration
 }
 
 var Envs = initConfig()
 
 func initConfig() Config {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file")
-	// }
 	if os.Getenv("ENV") != "test" {
 		if err := godotenv.Load(); err != nil {
 			log.Println("No .env file found, continuing without it.")
@@ -48,28 +51,33 @@ func initConfig() Config {
 	}
 
 	return Config{
-		Addr:               GetString("ADDR", ":8080"),
-		DbAddr:             GetString("DB_ADDR", "postgres://admin:adminpassword@localhost:5432/socialnetwork?sslmode=disable"),
-		MaxOpenConns:       GetInt("DB_MAX_OPEN_CONNS", 30),
-		MaxIdleConns:       GetInt("DB_MAX_IDLE_CONNS", 30),
-		MaxIdleTime:        GetString("DB_MAX_IDLE_TIME", "15m"),
-		ENV:                GetString("ENV", "development"),
-		ZeebeAddr:          GetString("ZEEBE_ADDR", "localhost:8080"),
-		ZeebeClientID:      GetString("ZEEBE_CLIENT_ID", "localhost:8080"),
-		ZeebeClientSecret:  GetString("ZEEBE_CLIENT_SECRET", "localhost:8080"),
-		ZeebeAuthServerUrl: GetString("ZEEBE_AUTH_SERVER_URL", "localhost:8080"),
-		FrontendURL:        GetString("FRONTEND_URL", "http://localhost:5173"),
-		MailerFromEmail:    GetString("MAILIER_FROM_EMAIL", "damar@test.com"),
-		MailerApiKey:       GetString("MAILIER_API_KEY", ""),
-		AdminUser:          GetString("ADMIN_USER", "admin"),
-		AdminPass:          GetString("ADMIN_PASS", "admin"),
-		JwtSecret:          GetString("JWT_SECRET", "admin"),
-		JwtIss:             GetString("JWT_ISS", "damar"),
-		RedisAddr:          GetString("REDIS_ADDR", "localhost:6379"),
-		RedisPass:          GetString("REDIS_PASS", ""),
-		RedisDB:            GetInt("REDIS_DB", 0),
-		RedisEnabled:       GetBool("REDIS_ENABLED", false),
-		AllowedOrigin:      GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5174"),
+		Addr:                 GetString("ADDR", ":8080"),
+		DbAddr:               GetString("DB_ADDR", ""),
+		MaxOpenConns:         GetInt("DB_MAX_OPEN_CONNS", 30),
+		MaxIdleConns:         GetInt("DB_MAX_IDLE_CONNS", 30),
+		MaxIdleTime:          GetString("DB_MAX_IDLE_TIME", "15m"),
+		ENV:                  GetString("ENV", "development"),
+		FrontendURL:          GetString("FRONTEND_URL", "http://localhost:5173"),
+		MailerFromEmail:      GetString("MAILIER_FROM_EMAIL", "damar@test.com"),
+		MailerApiKey:         GetString("MAILIER_API_KEY", ""),
+		MailerExp:            GetDay("MAILER_EXP", 3),
+		AdminUser:            GetString("ADMIN_USER", "admin"),
+		AdminPass:            GetString("ADMIN_PASS", "admin"),
+		JwtSecret:            GetString("JWT_SECRET", "admin"),
+		JwtIss:               GetString("JWT_ISS", "damar"),
+		JwtExp:               GetDay("JWT_EXP", 3),
+		RedisAddr:            GetString("REDIS_ADDR", "localhost:6379"),
+		RedisPass:            GetString("REDIS_PASS", ""),
+		RedisDB:              GetInt("REDIS_DB", 0),
+		RedisEnabled:         GetBool("REDIS_ENABLED", false),
+		AllowedOrigin:        GetStringSlice("CORS_ALLOWED_ORIGIN", "https://*,http://*"),
+		ZeebeAddr:            GetString("ZEEBE_ADDR", "localhost:8080"),
+		ZeebeClientID:        GetString("ZEEBE_CLIENT_ID", "localhost:8080"),
+		ZeebeClientSecret:    GetString("ZEEBE_CLIENT_SECRET", "localhost:8080"),
+		ZeebeAuthServerUrl:   GetString("ZEEBE_AUTH_SERVER_URL", "localhost:8080"),
+		RequestPerTimeFrame:  GetInt("REQUEST_PER_TIME_FRAME", 60),
+		RateLimiterEnabled:   GetBool("RATE_LIMITER_ENABLED", true),
+		RateLimiterTimeFrame: GetTimeSecond("RATE_LIMITER_TIME_FRAME", 5),
 	}
 }
 
@@ -80,6 +88,11 @@ func GetString(key, fallback string) string {
 	}
 
 	return val
+}
+
+func GetStringSlice(key, fallback string) []string {
+	val := GetString(key, fallback)
+	return strings.Split(val, ",")
 }
 
 func GetInt(key string, fallback int) int {
@@ -108,4 +121,32 @@ func GetBool(key string, fallback bool) bool {
 	}
 
 	return valAsBool
+}
+
+func GetTimeSecond(key string, fallback int) time.Duration {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return time.Second * time.Duration(fallback)
+	}
+
+	valAsInt, err := strconv.Atoi(val)
+	if err != nil {
+		return time.Second * time.Duration(fallback)
+	}
+
+	return time.Second * time.Duration(valAsInt)
+}
+
+func GetDay(key string, fallback int) time.Duration {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return time.Hour * 24 * time.Duration(fallback)
+	}
+
+	valAsInt, err := strconv.Atoi(val)
+	if err != nil {
+		return time.Hour * 24 * time.Duration(fallback)
+	}
+
+	return time.Hour * 24 * time.Duration(valAsInt)
 }

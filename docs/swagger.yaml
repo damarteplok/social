@@ -1,5 +1,7 @@
 basePath: /v1
 definitions:
+  main.CreatePesenKeWarungMakanPayload:
+    type: object
   main.CreatePostPayload:
     properties:
       content:
@@ -29,6 +31,29 @@ definitions:
     - email
     - password
     type: object
+  main.CrudPayload:
+    properties:
+      process_definition_key:
+        type: integer
+      process_name:
+        maxLength: 255
+        type: string
+      resource_name:
+        maxLength: 255
+        type: string
+      version:
+        type: integer
+    required:
+    - process_definition_key
+    - process_name
+    - resource_name
+    - version
+    type: object
+  main.DataStorePesenKeWarungMakanWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/store.PesenKeWarungMakan'
+    type: object
   main.DataStorePostWrapper:
     properties:
       data:
@@ -38,6 +63,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/store.User'
+    type: object
+  main.DeployBpmnPayload:
+    properties:
+      resource_name:
+        type: string
+    required:
+    - resource_name
     type: object
   main.HealthResponse:
     properties:
@@ -108,6 +140,21 @@ definitions:
       user_id:
         type: integer
     type: object
+  store.PesenKeWarungMakan:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      process_definition_key:
+        type: integer
+      resource_name:
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
   store.Post:
     properties:
       comments:
@@ -168,12 +215,12 @@ info:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: API for GopherSocial, a social network for gohpers
+  description: API for damarmunda, a camunda golang
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: GopherSocial API
+  title: damarmunda API
 paths:
   /authentication/token:
     post:
@@ -237,6 +284,127 @@ paths:
       summary: Register a user
       tags:
       - authentication
+  /camunda/crud:
+    post:
+      consumes:
+      - application/json
+      description: CRUD Store And Handler from Payload
+      parameters:
+      - description: Crud Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CrudPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: CRUD Store And Handler
+      tags:
+      - camunda
+  /camunda/deploy:
+    post:
+      consumes:
+      - application/json
+      description: Deploy Only Bpmn Camunda by Name In Folder Resources
+      parameters:
+      - description: Deploy Bpmn Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.DeployBpmnPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Deploy Only Bpmn Camunda
+      tags:
+      - camunda
+  /camunda/deploy-crud:
+    post:
+      consumes:
+      - application/json
+      description: Deploy Bpmn Camunda by Name In Folder Resources And Create CRUD
+        in Store And Handler File
+      parameters:
+      - description: Deploy Bpmn Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.DeployBpmnPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Deploy Bpmn Camunda
+      tags:
+      - camunda
+  /camunda/pesen_ke_warung_makan:
+    post:
+      consumes:
+      - application/json
+      description: Create PesenKeWarungMakan
+      parameters:
+      - description: PesenKeWarungMakan Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePesenKeWarungMakanPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: PesenKeWarungMakan Created
+          schema:
+            $ref: '#/definitions/main.DataStorePesenKeWarungMakanWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create PesenKeWarungMakan
+      tags:
+      - camunda
   /health:
     get:
       consumes:
