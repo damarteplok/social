@@ -1,6 +1,11 @@
 basePath: /v1
 definitions:
-  main.CreatePesenKeWarungMakanPayload:
+  main.CreateKantorNgetesIdPayload:
+    properties:
+      variables:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   main.CreatePostPayload:
     properties:
@@ -17,6 +22,50 @@ definitions:
     required:
     - content
     - title
+    type: object
+  main.CreateProcessInstancePayload:
+    properties:
+      awaitCompletion:
+        type: boolean
+      fetchVariables:
+        items:
+          type: string
+        type: array
+      operationReference:
+        type: integer
+      processDefinitionKey:
+        type: integer
+      requestTimeout:
+        type: integer
+      startInstructions:
+        items:
+          $ref: '#/definitions/main.StartInstruction'
+        type: array
+      tenantId:
+        type: string
+      variables:
+        additionalProperties:
+          type: string
+        type: object
+    required:
+    - processDefinitionKey
+    type: object
+  main.CreateProcessInstancesResponse:
+    properties:
+      processDefinitionId:
+        type: string
+      processDefinitionKey:
+        type: integer
+      processDefinitionVersion:
+        type: integer
+      processInstanceKey:
+        type: integer
+      tenantId:
+        type: string
+      variables:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   main.CreateUserTokenPayload:
     properties:
@@ -49,10 +98,10 @@ definitions:
     - resource_name
     - version
     type: object
-  main.DataStorePesenKeWarungMakanWrapper:
+  main.DataStoreKantorNgetesIdWrapper:
     properties:
       data:
-        $ref: '#/definitions/store.PesenKeWarungMakan'
+        $ref: '#/definitions/store.KantorNgetesId'
     type: object
   main.DataStorePostWrapper:
     properties:
@@ -66,6 +115,11 @@ definitions:
     type: object
   main.DeployBpmnPayload:
     properties:
+      form_resources:
+        items:
+          type: string
+        minItems: 0
+        type: array
       resource_name:
         type: string
     required:
@@ -96,6 +150,11 @@ definitions:
     - email
     - password
     - username
+    type: object
+  main.StartInstruction:
+    properties:
+      elementId:
+        type: string
     type: object
   main.UpdatePostPayload:
     properties:
@@ -140,13 +199,17 @@ definitions:
       user_id:
         type: integer
     type: object
-  store.PesenKeWarungMakan:
+  store.KantorNgetesId:
     properties:
       created_at:
+        type: string
+      deleted_at:
         type: string
       id:
         type: integer
       process_definition_key:
+        type: integer
+      process_instance_key:
         type: integer
       resource_name:
         type: string
@@ -284,7 +347,96 @@ paths:
       summary: Register a user
       tags:
       - authentication
-  /camunda/crud:
+  /bpmn/kantor_ngetes_id:
+    post:
+      consumes:
+      - application/json
+      description: Create KantorNgetesId
+      parameters:
+      - description: KantorNgetesId Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateKantorNgetesIdPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: KantorNgetesId Created
+          schema:
+            $ref: '#/definitions/main.DataStoreKantorNgetesIdWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create KantorNgetesId
+      tags:
+      - bpmn
+  /camunda/process-instance:
+    post:
+      consumes:
+      - application/json
+      description: Create Proses Instance form rest api
+      parameters:
+      - description: Create Proses Instance Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateProcessInstancePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.CreateProcessInstancesResponse'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Create Proses Instance form rest api
+      tags:
+      - camunda
+  /camunda/process-instance/{processinstanceKey}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel Proses Instance form rest api
+      parameters:
+      - description: processinstanceskey
+        in: path
+        name: processinstanceKey
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Cancel Proses Instance form rest api
+      tags:
+      - camunda
+  /camunda/resource/crud:
     post:
       consumes:
       - application/json
@@ -314,7 +466,7 @@ paths:
       summary: CRUD Store And Handler
       tags:
       - camunda
-  /camunda/deploy:
+  /camunda/resource/deploy:
     post:
       consumes:
       - application/json
@@ -344,7 +496,7 @@ paths:
       summary: Deploy Only Bpmn Camunda
       tags:
       - camunda
-  /camunda/deploy-crud:
+  /camunda/resource/deploy-crud:
     post:
       consumes:
       - application/json
@@ -373,36 +525,6 @@ paths:
       security:
       - BasicAuth: []
       summary: Deploy Bpmn Camunda
-      tags:
-      - camunda
-  /camunda/pesen_ke_warung_makan:
-    post:
-      consumes:
-      - application/json
-      description: Create PesenKeWarungMakan
-      parameters:
-      - description: PesenKeWarungMakan Payload
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/main.CreatePesenKeWarungMakanPayload'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: PesenKeWarungMakan Created
-          schema:
-            $ref: '#/definitions/main.DataStorePesenKeWarungMakanWrapper'
-        "400":
-          description: Bad Request
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Create PesenKeWarungMakan
       tags:
       - camunda
   /health:

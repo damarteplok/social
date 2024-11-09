@@ -14,21 +14,6 @@ type postKey string
 
 const postCtx postKey = "post"
 
-type CreatePostPayload struct {
-	Title   string   `json:"title" validate:"required,max=100"`
-	Content string   `json:"content" validate:"required,max=1000"`
-	Tags    []string `json:"tags"`
-}
-
-type UpdatePostPayload struct {
-	Title   *string `json:"title" validate:"omitempty,max=100"`
-	Content *string `json:"content" validate:"omitempty,max=1000"`
-}
-
-type DataStorePostWrapper struct {
-	Data store.Post `json:"data"`
-}
-
 // Create POST godoc
 //
 //	@Summary		Create Post

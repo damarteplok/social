@@ -108,7 +108,146 @@
                 }
             }
         },
-        "/camunda/crud": {
+        "/bpmn/kantor_ngetes_id": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create KantorNgetesId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Create KantorNgetesId",
+                "parameters": [
+                    {
+                        "description": "KantorNgetesId Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreateKantorNgetesIdPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "KantorNgetesId Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStoreKantorNgetesIdWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/process-instance": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Create Proses Instance form rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Create Proses Instance form rest api",
+                "parameters": [
+                    {
+                        "description": "Create Proses Instance Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreateProcessInstancePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.CreateProcessInstancesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/process-instance/{processinstanceKey}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Cancel Proses Instance form rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Cancel Proses Instance form rest api",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "processinstanceskey",
+                        "name": "processinstanceKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/resource/crud": {
             "post": {
                 "security": [
                     {
@@ -155,7 +294,7 @@
                 }
             }
         },
-        "/camunda/deploy": {
+        "/camunda/resource/deploy": {
             "post": {
                 "security": [
                     {
@@ -202,7 +341,7 @@
                 }
             }
         },
-        "/camunda/deploy-crud": {
+        "/camunda/resource/deploy-crud": {
             "post": {
                 "security": [
                     {
@@ -236,53 +375,6 @@
                         "description": "Created",
                         "schema": {
                             "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
-        "/camunda/pesen_ke_warung_makan": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create PesenKeWarungMakan",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "camunda"
-                ],
-                "summary": "Create PesenKeWarungMakan",
-                "parameters": [
-                    {
-                        "description": "PesenKeWarungMakan Payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.CreatePesenKeWarungMakanPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "PesenKeWarungMakan Created",
-                        "schema": {
-                            "$ref": "#/definitions/main.DataStorePesenKeWarungMakanWrapper"
                         }
                     },
                     "400": {
@@ -713,8 +805,16 @@
         }
     },
     "definitions": {
-        "main.CreatePesenKeWarungMakanPayload": {
-            "type": "object"
+        "main.CreateKantorNgetesIdPayload": {
+            "type": "object",
+            "properties": {
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "main.CreatePostPayload": {
             "type": "object",
@@ -736,6 +836,73 @@
                 "title": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "main.CreateProcessInstancePayload": {
+            "type": "object",
+            "required": [
+                "processDefinitionKey"
+            ],
+            "properties": {
+                "awaitCompletion": {
+                    "type": "boolean"
+                },
+                "fetchVariables": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "operationReference": {
+                    "type": "integer"
+                },
+                "processDefinitionKey": {
+                    "type": "integer"
+                },
+                "requestTimeout": {
+                    "type": "integer"
+                },
+                "startInstructions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.StartInstruction"
+                    }
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "main.CreateProcessInstancesResponse": {
+            "type": "object",
+            "properties": {
+                "processDefinitionId": {
+                    "type": "string"
+                },
+                "processDefinitionKey": {
+                    "type": "integer"
+                },
+                "processDefinitionVersion": {
+                    "type": "integer"
+                },
+                "processInstanceKey": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -782,11 +949,11 @@
                 }
             }
         },
-        "main.DataStorePesenKeWarungMakanWrapper": {
+        "main.DataStoreKantorNgetesIdWrapper": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/store.PesenKeWarungMakan"
+                    "$ref": "#/definitions/store.KantorNgetesId"
                 }
             }
         },
@@ -812,6 +979,13 @@
                 "resource_name"
             ],
             "properties": {
+                "form_resources": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "resource_name": {
                     "type": "string"
                 }
@@ -851,6 +1025,14 @@
                 "username": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "main.StartInstruction": {
+            "type": "object",
+            "properties": {
+                "elementId": {
+                    "type": "string"
                 }
             }
         },
@@ -919,16 +1101,22 @@
                 }
             }
         },
-        "store.PesenKeWarungMakan": {
+        "store.KantorNgetesId": {
             "type": "object",
             "properties": {
                 "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "process_definition_key": {
+                    "type": "integer"
+                },
+                "process_instance_key": {
                     "type": "integer"
                 },
                 "resource_name": {

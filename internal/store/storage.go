@@ -44,6 +44,9 @@ type Storage struct {
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
+	KantorNgetesId interface {
+		Create(context.Context, *KantorNgetesId) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {

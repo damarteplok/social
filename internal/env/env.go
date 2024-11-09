@@ -39,6 +39,14 @@ type Config struct {
 	RequestPerTimeFrame  int
 	RateLimiterEnabled   bool
 	RateLimiterTimeFrame time.Duration
+	MinioEndPoint        string
+	MinioPort            int
+	MinioSSL             bool
+	MinioAccessKey       string
+	MinioSecretKey       string
+	MinioDefaultBucket   string
+	MinioExpires         time.Duration
+	MinioEnabled         bool
 }
 
 var Envs = initConfig()
@@ -78,6 +86,14 @@ func initConfig() Config {
 		RequestPerTimeFrame:  GetInt("REQUEST_PER_TIME_FRAME", 60),
 		RateLimiterEnabled:   GetBool("RATE_LIMITER_ENABLED", true),
 		RateLimiterTimeFrame: GetTimeSecond("RATE_LIMITER_TIME_FRAME", 5),
+		MinioEndPoint:        GetString("MINIO_ENDPOINT", "127.0.0.1"),
+		MinioPort:            GetInt("MINIO_PORT", 9000),
+		MinioSSL:             GetBool("MINIO_SSL", false),
+		MinioAccessKey:       GetString("MINIO_ACCESS_KEY", ""),
+		MinioSecretKey:       GetString("MINIO_SECRET_KEY", ""),
+		MinioDefaultBucket:   GetString("MINIO_DEFAULT_BUCKET", ""),
+		MinioExpires:         GetDay("MINIO_EXPIRES", 1),
+		MinioEnabled:         GetBool("MINIO_ENABLED", true),
 	}
 }
 

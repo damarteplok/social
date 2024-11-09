@@ -1,0 +1,199 @@
+#
+# Camunda Helm chart.
+#
+
+# global:
+  # identity:
+  #   auth:
+  #     operate:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     tasklist:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     optimize:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     webModeler:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     connectors:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     console:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+  #     zeebe:
+  #       existingSecret:
+  #         name: identity-secret-for-components
+
+
+# Camunda Helm chart.
+
+global:
+  image:
+    tag:
+  identity:
+    auth:
+      operate:
+        existingSecret:
+          name: identity-secret-for-components
+      tasklist:
+        existingSecret:
+          name: identity-secret-for-components
+      optimize:
+        existingSecret:
+          name: identity-secret-for-components
+      webModeler:
+        existingSecret:
+          name: identity-secret-for-components
+      connectors:
+        existingSecret:
+          name: identity-secret-for-components
+      console:
+        existingSecret:
+          name: identity-secret-for-components
+      zeebe:
+        existingSecret:
+          name: identity-secret-for-components
+
+console:
+  image:
+    tag: 8.6.10
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+connectors:
+  image:
+    repository: camunda/connectors-bundle
+    tag: 8.6.4
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+operate:
+  image:
+    tag: 8.6.3
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+optimize:
+  image:
+    repository: camunda/optimize
+    tag: 8.6.2
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+tasklist:
+  image:
+    repository: camunda/tasklist
+    tag: 8.6.5
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+webModeler:
+  image:
+    tag: 8.6.3
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+zeebe:
+  image:
+    repository: camunda/zeebe
+    tag: 8.6.5
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+zeebeGateway:
+  image:
+    repository: camunda/zeebe
+    tag: 8.6.5
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+# Identity
+identity:
+  image:
+    repository: camunda/identity
+    tag: 8.6.4
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+identityKeycloak:
+  image:
+    repository: bitnami/keycloak
+    tag: 25.0.6
+  postgresql:
+    image:
+      repository: bitnami/postgresql
+      tag: 15.8.0
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+# Elasticsearch
+elasticsearch:
+  image:
+    repository: bitnami/elasticsearch
+    tag: 8.15.3
+  resources:
+    requests:
+      memory: "2Gi"        # Moderate memory for Elasticsearch
+      cpu: "500m"
+    limits:
+      memory: "4Gi"        # Limited memory for Elasticsearch to prevent excess usage
+      cpu: "1"
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: "standard"
+    resources:
+      requests:
+        storage: 10Gi       # Reduced storage request for Elasticsearch

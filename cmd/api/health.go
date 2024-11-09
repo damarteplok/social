@@ -4,12 +4,6 @@ import (
 	"net/http"
 )
 
-type HealthResponse struct {
-	Status  string `json:"status"`
-	Env     string `json:"env"`
-	Version string `json:"version"`
-}
-
 // HealthMonitoring godoc
 //
 //	@Summary		Fetches health status api

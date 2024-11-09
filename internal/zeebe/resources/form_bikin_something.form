@@ -1,0 +1,131 @@
+{
+  "components": [
+    {
+      "text": "bikin something form",
+      "label": "Text view",
+      "type": "text",
+      "layout": {
+        "row": "Row_18dl3mm",
+        "columns": null
+      },
+      "id": "Field_0o229xw"
+    },
+    {
+      "label": "text1",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_01blnk6",
+        "columns": null
+      },
+      "id": "Field_1xz4f7c",
+      "key": "text1",
+      "description": "text1",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "emailtest",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0q52g1s",
+        "columns": null
+      },
+      "id": "Field_0eg98mq",
+      "key": "email_test",
+      "description": "emailtest",
+      "validate": {
+        "required": true,
+        "validationType": "email"
+      }
+    },
+    {
+      "label": "Text area test",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_1cyzarw",
+        "columns": null
+      },
+      "id": "Field_1ts2gku",
+      "key": "text_area_test",
+      "description": "text area test",
+      "validate": {
+        "required": false
+      }
+    },
+    {
+      "label": "Number",
+      "type": "number",
+      "layout": {
+        "row": "Row_0iovjrr",
+        "columns": null
+      },
+      "id": "Field_0o09217",
+      "key": "number_test",
+      "description": "number test",
+      "increment": "1",
+      "decimalDigits": 2,
+      "validate": {
+        "min": 0
+      }
+    },
+    {
+      "values": [
+        {
+          "label": "yes",
+          "value": "yes"
+        },
+        {
+          "label": "no",
+          "value": "no"
+        }
+      ],
+      "label": "Select",
+      "type": "select",
+      "layout": {
+        "row": "Row_03s2gf7",
+        "columns": null
+      },
+      "id": "Field_0kgquck",
+      "key": "select_test",
+      "description": "select test",
+      "searchable": true,
+      "disabled": false
+    },
+    {
+      "action": "submit",
+      "label": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_1o58ed8",
+        "columns": null
+      },
+      "id": "Field_1bq3r57",
+      "properties": {
+        "decision": "submit"
+      }
+    },
+    {
+      "action": "submit",
+      "label": "draft",
+      "type": "button",
+      "layout": {
+        "row": "Row_1o58ed8",
+        "columns": null
+      },
+      "id": "Field_05lmuhe",
+      "properties": {
+        "decision": "draft"
+      }
+    }
+  ],
+  "type": "default",
+  "id": "form_bikin_something",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.5.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.25.0"
+  },
+  "schemaVersion": 16
+}

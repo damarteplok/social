@@ -12,90 +12,12 @@ import (
 	"time"
 
 	"github.com/damarteplok/social/docs"
-	"github.com/damarteplok/social/internal/auth"
 	"github.com/damarteplok/social/internal/env"
-	"github.com/damarteplok/social/internal/mailer"
-	"github.com/damarteplok/social/internal/ratelimiter"
-	"github.com/damarteplok/social/internal/store"
-	"github.com/damarteplok/social/internal/store/cache"
-	"github.com/damarteplok/social/internal/zeebe"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	"go.uber.org/zap"
 )
-
-type application struct {
-	config        config
-	store         store.Storage
-	cacheStorage  cache.Storage
-	logger        *zap.SugaredLogger
-	mailer        mailer.Client
-	authenticator auth.Authenticator
-	rateLimiter   ratelimiter.Limiter
-	zeebeClient   zeebe.ZeebeCamunda
-}
-
-type config struct {
-	addr        string
-	db          dbConfig
-	env         string
-	apiURL      string
-	mail        mailConfig
-	camunda     camundaConfig
-	frontendURL string
-	auth        authConfig
-	redisCfg    redisConfig
-	rateLimiter ratelimiter.Config
-}
-
-type redisConfig struct {
-	addr    string
-	pw      string
-	db      int
-	enabled bool
-}
-
-type dbConfig struct {
-	addr         string
-	maxOpenConns int
-	maxIdleConns int
-	maxIdleTime  string
-}
-
-type mailConfig struct {
-	sendgrid  sendGridConfig
-	exp       time.Duration
-	fromEmail string
-}
-
-type camundaConfig struct {
-	zeebeAddr          string
-	zeebeClientId      string
-	zeebeClientSecret  string
-	zeebeAuthServerUrl string
-}
-
-type sendGridConfig struct {
-	apiKey string
-}
-
-type authConfig struct {
-	basic basicConfig
-	token tokenConfig
-}
-
-type basicConfig struct {
-	user string
-	pass string
-}
-
-type tokenConfig struct {
-	secret string
-	exp    time.Duration
-	iss    string
-}
 
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
@@ -126,6 +48,13 @@ func (app *application) mount() http.Handler {
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
+		// Public routes
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
+		})
+
+		// Auth routes
 		r.Route("/posts", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
@@ -155,16 +84,51 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-		r.With(app.BasicAuthMiddleware()).Route("/camunda", func(r chi.Router) {
-			r.Post("/deploy", app.deployOnlyCamundaHandler)
-			r.Post("/crud", app.crudCamundaHandler)
-			r.Post("/deploy-crud", app.deployCamundaHandler)
+		r.Route("/camunda", func(r chi.Router) {
+			r.Route("/resource", func(r chi.Router) {
+				r.With(app.BasicAuthMiddleware()).Post("/deploy", app.deployOnlyCamundaHandler)
+				r.With(app.BasicAuthMiddleware()).Post("/crud", app.crudCamundaHandler)
+				r.With(app.BasicAuthMiddleware()).Post("/deploy-crud", app.deployCamundaHandler)
+				r.Post("/{resourceKey}/delete", func(w http.ResponseWriter, r *http.Request) {})
+			})
+			r.Route("/job", func(r chi.Router) {
+				r.Post("/activate", func(w http.ResponseWriter, r *http.Request) {})
+				r.Route("/{jobKey}", func(r chi.Router) {
+					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+					r.Patch("/", func(w http.ResponseWriter, r *http.Request) {})
+					r.Post("/fail", func(w http.ResponseWriter, r *http.Request) {})
+					r.Post("/error", func(w http.ResponseWriter, r *http.Request) {})
+				})
+			})
+			r.Route("/incident", func(r chi.Router) {
+				r.Route("/{incidentKey}", func(r chi.Router) {
+					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+				})
+			})
+			r.Route("/usertask", func(r chi.Router) {
+				r.Route("/{usertaskKey}", func(r chi.Router) {
+					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+					r.Patch("/", func(w http.ResponseWriter, r *http.Request) {})
+					r.Post("/assignment", func(w http.ResponseWriter, r *http.Request) {})
+					r.Post("/unassignment", func(w http.ResponseWriter, r *http.Request) {})
+				})
+			})
+			r.With(app.BasicAuthMiddleware()).Route("/process-instance", func(r chi.Router) {
+				r.Post("/", app.createProsesInstance)
+				r.Route("/{processinstanceKey}", func(r chi.Router) {
+					r.Post("/cancel", app.cancelProcessInstance)
+				})
+			})
+			r.Route("/message", func(r chi.Router) {
+				r.Patch("/publish", func(w http.ResponseWriter, r *http.Request) {})
+				r.Patch("/correlate", func(w http.ResponseWriter, r *http.Request) {})
+			})
 		})
 
-		// Public routes
-		r.Route("/authentication", func(r chi.Router) {
-			r.Post("/user", app.registerUserHandler)
-			r.Post("/token", app.createTokenHandler)
+		r.Route("/bpmn", func(r chi.Router) {
+			r.Route("/kantor_ngetes_id", func(r chi.Router) {
+				r.Post("/", app.createKantorNgetesIdHandler)
+			})
 		})
 	})
 

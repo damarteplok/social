@@ -3,11 +3,13 @@ package main
 import (
 	"expvar"
 	"runtime"
+	"strconv"
 
 	"github.com/damarteplok/social/internal/auth"
 	"github.com/damarteplok/social/internal/db"
 	"github.com/damarteplok/social/internal/env"
 	"github.com/damarteplok/social/internal/mailer"
+	"github.com/damarteplok/social/internal/minioupload"
 	"github.com/damarteplok/social/internal/ratelimiter"
 	"github.com/damarteplok/social/internal/store"
 	"github.com/damarteplok/social/internal/store/cache"
@@ -59,6 +61,16 @@ func main() {
 			sendgrid: sendGridConfig{
 				apiKey: env.Envs.MailerApiKey,
 			},
+		},
+		minio: minioConfig{
+			addr:      env.Envs.MinioEndPoint,
+			port:      env.Envs.MinioPort,
+			ssl:       env.Envs.MinioSSL,
+			accessKey: env.Envs.MinioAccessKey,
+			secretKey: env.Envs.MinioSecretKey,
+			bucket:    env.Envs.MinioDefaultBucket,
+			expires:   env.Envs.MinioExpires,
+			enabled:   env.Envs.MinioEnabled,
 		},
 		auth: authConfig{
 			basic: basicConfig{
@@ -131,22 +143,51 @@ func main() {
 		cfg.camunda.zeebeAddr,
 	)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatalw("zeebe failed", err)
 	}
 	defer zeebeClient.Close()
+	logger.Info("zeebe client established")
+
+	// zeebe rest client
+	zeebeClientRest, err := zeebe.NewZeebeClientRest(
+		cfg.camunda.zeebeClientId,
+		cfg.camunda.zeebeClientSecret,
+		cfg.camunda.zeebeAuthServerUrl,
+		cfg.camunda.zeebeAddr,
+	)
+	if err != nil {
+		logger.Fatalw("zeebe rest api client failed", err)
+	}
+	defer zeebeClientRest.Close()
+	logger.Info("zeebe client rest api established")
+
+	// minio
+	endpointMinio := cfg.minio.addr + ":" + strconv.Itoa(cfg.minio.port)
+	minioClient, err := minioupload.NewMinioClient(
+		endpointMinio,
+		cfg.minio.accessKey,
+		cfg.minio.secretKey,
+		cfg.minio.ssl,
+	)
+	if err != nil {
+		logger.Fatalw("minio failed", err)
+	}
+	logger.Info("minio established")
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
 
 	app := &application{
-		config:        cfg,
-		store:         store,
-		cacheStorage:  cacheStorage,
-		logger:        logger,
-		mailer:        mailer,
-		authenticator: jwtAuthenticator,
-		rateLimiter:   rateLimiter,
-		zeebeClient:   zeebeClient,
+		config:          cfg,
+		store:           store,
+		cacheStorage:    cacheStorage,
+		logger:          logger,
+		mailer:          mailer,
+		authenticator:   jwtAuthenticator,
+		rateLimiter:     rateLimiter,
+		zeebeClient:     zeebeClient,
+		zeebeClientRest: *zeebeClientRest,
+		minioClient:     minioClient,
 	}
 
 	// Metrics Collected

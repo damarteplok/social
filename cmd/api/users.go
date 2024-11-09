@@ -13,10 +13,6 @@ type userKey string
 
 const userCtx userKey = "user"
 
-type DataStoreUserWrapper struct {
-	Data store.User `json:"data"`
-}
-
 // ActivateUser godoc
 //
 //	@Summary		Activate a user

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-secret-for-components
+type: Opaque
+data:
+  connectors-secret: c2VjcmV0
+  console-secret: c2VjcmV0
+  operate-secret: c2VjcmV0
+  optimize-secret: c2VjcmV0
+  tasklist-secret: c2VjcmV0
+  zeebe-secret: c2VjcmV0
+  admin-password: c2VjcmV0
+  postgres-password: c2VjcmV0
+  password: c2VjcmV0
+  smtp-password: c2VjcmV0

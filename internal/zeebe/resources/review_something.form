@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "action": "submit",
+      "label": "approve",
+      "type": "button",
+      "layout": {
+        "row": "Row_1y1cf24",
+        "columns": null
+      },
+      "id": "Field_12evc3j",
+      "properties": {
+        "decision": "approve"
+      }
+    },
+    {
+      "action": "submit",
+      "label": "revisi",
+      "type": "button",
+      "layout": {
+        "row": "Row_1y1cf24",
+        "columns": null
+      },
+      "id": "Field_0eotlgf",
+      "properties": {
+        "decision": "revisi"
+      }
+    }
+  ],
+  "type": "default",
+  "id": "review_bikin_something",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.5.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.25.0"
+  },
+  "schemaVersion": 16
+}

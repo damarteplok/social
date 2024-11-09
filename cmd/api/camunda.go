@@ -1,16 +1,18 @@
 package main
 
-import "net/http"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
 
-type DeployBpmnPayload struct {
-	ResourceName string `json:"resource_name" validate:"required"`
-}
-type CrudPayload struct {
-	ProcessName          string `json:"process_name" validate:"required,max=255"`
-	ResourceName         string `json:"resource_name" validate:"required,max=255"`
-	Version              int32  `json:"version" validate:"required"`
-	ProcessDefinitionKey int64  `json:"process_definition_key" validate:"required"`
-}
+	"github.com/go-chi/chi/v5"
+)
+
+const (
+	ProcessInstanceUrl = "/v2/process-instances"
+)
 
 // Deploy godoc
 //
@@ -24,7 +26,7 @@ type CrudPayload struct {
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		BasicAuth
-//	@Router			/camunda/deploy-crud  [post]
+//	@Router			/camunda/resource/deploy-crud  [post]
 func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload DeployBpmnPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -37,21 +39,32 @@ func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	response, err := app.zeebeClient.DeployProcessDefinition(payload.ResourceName)
+	response, bpmnProcess, err := app.zeebeClient.DeployProcessDefinition(payload.ResourceName, payload.FormResources)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := app.zeebeClient.GenerateCRUDHandlers(response); err != nil {
+	if err := app.zeebeClient.GenerateCRUDUserTaskServiceTaskHandler(&bpmnProcess); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
+	processes := make([]map[string]interface{}, len(response))
+	for i, process := range response {
+		if err := app.zeebeClient.GenerateCRUDHandlers(process); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		processes[i] = map[string]interface{}{
+			"processDefinitionKey": process.ProcessDefinitionKey,
+			"bpmnProcessId":        process.BpmnProcessId,
+			"version":              process.Version,
+		}
+	}
+
 	jsonResponse := map[string]interface{}{
-		"processDefinitionKey": response.ProcessDefinitionKey,
-		"ppmnProcessId":        response.BpmnProcessId,
-		"version":              response.Version,
+		"processes": processes,
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, jsonResponse); err != nil {
@@ -72,7 +85,7 @@ func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Requ
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		BasicAuth
-//	@Router			/camunda/deploy  [post]
+//	@Router			/camunda/resource/deploy  [post]
 func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload DeployBpmnPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -85,16 +98,23 @@ func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	response, err := app.zeebeClient.DeployProcessDefinition(payload.ResourceName)
+	response, _, err := app.zeebeClient.DeployProcessDefinition(payload.ResourceName, payload.FormResources)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
+	processes := make([]map[string]interface{}, len(response))
+	for i, process := range response {
+		processes[i] = map[string]interface{}{
+			"processDefinitionKey": process.ProcessDefinitionKey,
+			"bpmnProcessId":        process.BpmnProcessId,
+			"version":              process.Version,
+		}
+	}
+
 	jsonResponse := map[string]interface{}{
-		"processDefinitionKey": response.ProcessDefinitionKey,
-		"ppmnProcessId":        response.BpmnProcessId,
-		"version":              response.Version,
+		"processes": processes,
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, jsonResponse); err != nil {
@@ -115,7 +135,7 @@ func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		BasicAuth
-//	@Router			/camunda/crud  [post]
+//	@Router			/camunda/resource/crud  [post]
 func (app *application) crudCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CrudPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -128,12 +148,101 @@ func (app *application) crudCamundaHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := app.zeebeClient.GenerateCRUDFromPayloadHandlers(payload.ProcessName, payload.ResourceName, payload.Version, payload.ProcessDefinitionKey); err != nil {
+	if err := app.zeebeClient.GenerateCRUDFromPayloadHandlers(
+		payload.ProcessName,
+		payload.ResourceName,
+		payload.Version,
+		payload.ProcessDefinitionKey,
+	); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, "ok"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Create Proses Instance godoc
+//
+//	@Summary		Create Proses Instance form rest api
+//	@Description	Create Proses Instance form rest api
+//	@Tags			camunda
+//	@Accept			json
+//	@produce		json
+//	@Param			payload	body		CreateProcessInstancePayload	true	"Create Proses Instance Payload"
+//	@Success		200		{object}	CreateProcessInstancesResponse
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/process-instance  [post]
+func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Request) {
+	var payload CreateProcessInstancePayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ProcessInstanceUrl, bytes.NewBuffer(body))
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	var processInstanceResp CreateProcessInstancesResponse
+	if err := json.Unmarshal(resp, &processInstanceResp); err != nil {
+		app.internalServerError(w, r, fmt.Errorf("failed to unmarshal response: %w", err))
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, processInstanceResp); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Cancel Proses Instance godoc
+//
+//	@Summary		Cancel Proses Instance form rest api
+//	@Description	Cancel Proses Instance form rest api
+//	@Tags			camunda
+//	@Accept			json
+//	@produce		json
+//	@Param			processinstanceKey	path		int	true	"processinstanceskey"
+//	@Success		204					{string}	string
+//	@Failure		400					{object}	error
+//	@Failure		500					{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/process-instance/{processinstanceKey}/cancel  [post]
+func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Request) {
+	processInstanceKey, err := strconv.ParseInt(chi.URLParam(r, "processinstanceKey"), 10, 64)
+	if err != nil || processInstanceKey < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	url := ProcessInstanceUrl + "/" + strconv.Itoa(int(processInstanceKey)) + "/cancellation"
+	_, err = app.zeebeClientRest.SendRequest(ctx, "POST", url, bytes.NewBufferString("{}"))
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, "cancelled success"); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
