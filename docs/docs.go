@@ -396,6 +396,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/camunda/tasklist": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Search TaskList form rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda"
+                ],
+                "summary": "Search TaskList form rest api",
+                "parameters": [
+                    {
+                        "description": "Search TaskList Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.SearchTaskListPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.SearchTaskListPayload"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "security": [
@@ -1033,6 +1080,94 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "main.SearchTaskListPayload": {
+            "type": "object",
+            "properties": {
+                "assgined": {
+                    "type": "boolean"
+                },
+                "assignee": {
+                    "type": "string"
+                },
+                "assignees": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "candidateGroup": {
+                    "type": "string"
+                },
+                "candidateGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "candidateUser": {
+                    "type": "string"
+                },
+                "candidateUsers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "processDefinitionKey": {
+                    "type": "string"
+                },
+                "processInstanceKey": {
+                    "type": "string"
+                },
+                "searchAfter": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "searchAfterOrEqual": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "searchBefore": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "searchBeforeOrEqual": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort": {
+                    "$ref": "#/definitions/main.SortSearchTasklist"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "taskDefinitionId": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.SortSearchTasklist": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
                 }
             }
         },

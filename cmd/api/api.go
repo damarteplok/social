@@ -123,9 +123,13 @@ func (app *application) mount() http.Handler {
 				r.Patch("/publish", func(w http.ResponseWriter, r *http.Request) {})
 				r.Patch("/correlate", func(w http.ResponseWriter, r *http.Request) {})
 			})
+			r.Route("/tasklist", func(r chi.Router) {
+				r.Post("/", app.searchTaskListHandler)
+			})
 		})
 
 		r.Route("/bpmn", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Route("/kantor_ngetes_id", func(r chi.Router) {
 				r.Post("/", app.createKantorNgetesIdHandler)
 			})

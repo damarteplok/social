@@ -44,13 +44,13 @@ func (c *Client) Close() error {
 	return c.client.Close()
 }
 
-func (c *Client) StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceWithResultResponse, error) {
+func (c *Client) StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceResponse, error) {
 	request, err := c.client.NewCreateInstanceCommand().ProcessDefinitionKey(processDefinitionKey).VariablesFromMap(variables)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create workflow instance request: %w", err)
 	}
 
-	result, err := request.WithResult().Send(ctx)
+	result, err := request.Send(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start workflow: %w", err)
 	}
@@ -786,20 +786,43 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// TODO: Change in this code
+	// TODO: ADD to storage interface for use create store
+	
+	ctx := r.Context()
+	variables := make(map[string]interface{})
 
-	//model := &store.%s{}
+	if payload.Variables != nil {
+		for k, v := range *payload.Variables {
+			variables[k] = v
+		}
+	}
 
-	//ctx := r.Context()
+	resp, err := app.zeebeClient.StartWorkflow(ctx, store.%sProcessDefinitionKey, variables)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 
-	// if err := app.store.%s.Create(ctx, model); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	model := &store.%s{
+		ProcessDefinitionKey: resp.GetProcessDefinitionKey(),
+		Version:              resp.GetVersion(),
+		ProcessInstanceKey:   resp.GetProcessInstanceKey(),
+		ResourceName:         store.%sResourceName,
+	}
 
-	//if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
-	//	app.internalServerError(w, r, err)
-	//	return
-	//}
+	if err := app.store.%s.Create(ctx, model); err != nil {
+		if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }
 `,
 		processName,
@@ -818,6 +841,9 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 		processName,
 		processName,
 		tableName,
+		processName,
+		processName,
+
 		processName,
 		processName,
 		processName,

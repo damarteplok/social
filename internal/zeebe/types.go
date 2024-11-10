@@ -17,7 +17,7 @@ type ZeebeCamunda interface {
 	GenerateCRUDHandlers(processMetadata *pb.ProcessMetadata) error
 	GenerateCRUDUserTaskServiceTaskHandler(bpmnProcess *[]BPMNProcess) error
 	GenerateCRUDFromPayloadHandlers(processName, resourceName string, version int32, processDefinitionKey int64) error
-	StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceWithResultResponse, error)
+	StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceResponse, error)
 	CancelWorkflow(context.Context, int64) error
 	StartWorker(jobType, nameWorker string, handler worker.JobHandler) (worker.JobWorker, error)
 	Close() error

@@ -1,4 +1,5 @@
 package store
+
 import (
 	"context"
 	"database/sql"
@@ -6,21 +7,21 @@ import (
 )
 
 const (
-	KantorNgetesIdVersion = 1
+	KantorNgetesIdVersion              = 1
 	KantorNgetesIdProcessDefinitionKey = 2251799813765404
-	KantorNgetesIdResourceName = "bikin_something.bpmn"
+	KantorNgetesIdResourceName         = "bikin_something.bpmn"
 )
 
 // TODO: UPDATE THIS STRUCT AND CODE BELOW
 type KantorNgetesId struct {
-    ID int64 `json:"id"`
-	ProcessDefinitionKey int64  `json:"process_definition_key"`
-	Version int32 `json:"version"`
-	ResourceName string `json:"resource_name"`
-	ProcessInstanceKey int64 `json:"process_instance_key"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	DeletedAt *string `json:"deleted_at"`
+	ID                   int64   `json:"id"`
+	ProcessDefinitionKey int64   `json:"process_definition_key"`
+	Version              int32   `json:"version"`
+	ResourceName         string  `json:"resource_name"`
+	ProcessInstanceKey   int64   `json:"process_instance_key"`
+	CreatedAt            string  `json:"created_at"`
+	UpdatedAt            string  `json:"updated_at"`
+	DeletedAt            *string `json:"deleted_at"`
 }
 
 type KantorNgetesIdStore struct {
@@ -42,7 +43,7 @@ func (s *KantorNgetesIdStore) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 		return nil
-	})	
+	})
 }
 
 func (s *KantorNgetesIdStore) Update(ctx context.Context, model *KantorNgetesId) error {
@@ -53,10 +54,10 @@ func (s *KantorNgetesIdStore) Update(ctx context.Context, model *KantorNgetesId)
 		return nil
 	})
 }
-	
+
 func (s *KantorNgetesIdStore) create(ctx context.Context, tx *sql.Tx, model *KantorNgetesId) error {
-	//model.Version = 1
-	//model.ProcessDefinitionKey = 2251799813765404
+	// model.Version = 1
+	// model.ProcessDefinitionKey = 2251799813765404
 	model.ResourceName = "bikin_something.bpmn"
 
 	query := `
@@ -79,7 +80,7 @@ func (s *KantorNgetesIdStore) create(ctx context.Context, tx *sql.Tx, model *Kan
 		model.ProcessDefinitionKey,
 		model.Version,
 		model.ResourceName,
-		mode.ProcessInstanceKey,
+		model.ProcessInstanceKey,
 	).Scan(
 		&model.ID,
 		&model.ProcessDefinitionKey,
@@ -181,4 +182,3 @@ func (s *KantorNgetesIdStore) update(ctx context.Context, tx *sql.Tx, model *Kan
 
 	return nil
 }
-

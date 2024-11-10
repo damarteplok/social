@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"time"
 
 	"github.com/damarteplok/social/internal/auth"
@@ -161,6 +162,40 @@ type CreateProcessInstancesResponse struct {
 	ProcessInstanceKey       int64             `json:"processInstanceKey"`
 	TenantId                 string            `json:"tenantId"`
 	Variables                map[string]string `json:"variables"`
+}
+
+type SortSearchTasklist struct {
+	Field string
+	Order string
+}
+
+type SearchTaskListPayload struct {
+	State                string             `json:"state,omitempty"`
+	Assigned             bool               `json:"assgined,omitempty"`
+	Assignee             string             `json:"assignee,omitempty"`
+	Assignees            []string           `json:"assignees,omitempty"`
+	TaskDefinitionId     string             `json:"taskDefinitionId,omitempty"`
+	CandidateGroup       string             `json:"candidateGroup,omitempty"`
+	CandidateGroups      []string           `json:"candidateGroups,omitempty"`
+	CandidateUser        string             `json:"candidateUser,omitempty"`
+	CandidateUsers       []string           `json:"candidateUsers,omitempty"`
+	ProcessDefinitionKey string             `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceKey   string             `json:"processInstanceKey,omitempty"`
+	PageSize             int32              `json:"pageSize,omitempty"`
+	Sort                 SortSearchTasklist `json:"sort,omitempty"`
+	SearchAfter          []string           `json:"searchAfter,omitempty"`
+	SearchAfterOrEqual   []string           `json:"searchAfterOrEqual,omitempty"`
+	SearchBefore         []string           `json:"searchBefore,omitempty"`
+	SearchBeforeOrEqual  []string           `json:"searchBeforeOrEqual,omitempty"`
+}
+
+func (p *SearchTaskListPayload) IsValidState() error {
+	switch p.State {
+	case StateCreated, StateCompleted, StateCanceled, StateFailed:
+		return nil
+	default:
+		return errors.New("invalid state: must be one of CREATED, COMPLETED, CANCELED, FAILED")
+	}
 }
 
 // authenticated types

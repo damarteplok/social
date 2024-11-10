@@ -1,15 +1,18 @@
 package main
 
 import (
-    "net/http"
+	"context"
+	"net/http"
+	"time"
+
 	"github.com/damarteplok/social/internal/store"
 )
 
 type CreateKantorNgetesIdPayload struct {
-	Variables   		 *map[string]string  `json:"variables,omitempty"`
+	Variables *map[string]string `json:"variables,omitempty"`
 }
 type UpdateKantorNgetesIdPayload struct {
-	Variables            *map[string]string  `json:"variables,omitempty"`
+	Variables *map[string]string `json:"variables,omitempty"`
 }
 type DataStoreKantorNgetesIdWrapper struct {
 	Data store.KantorNgetesId `json:"data"`
@@ -31,6 +34,8 @@ type DataStoreKantorNgetesIdWrapper struct {
 //	@Security		ApiKeyAuth
 //	@Router			/bpmn/kantor_ngetes_id  [post]
 func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r)
+
 	var payload CreateKantorNgetesIdPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
@@ -42,19 +47,43 @@ func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// TODO: Change in this code
+	variables := make(map[string]interface{})
+	variables["user"] = user
 
-	//model := &store.KantorNgetesId{}
+	if payload.Variables != nil {
+		for k, v := range *payload.Variables {
+			variables[k] = v
+		}
+	}
 
-	//ctx := r.Context()
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
-	// if err := app.store.KantorNgetesId.Create(ctx, model); err != nil {
-	// 	app.internalServerError(w, r, err)
-	// 	return
-	// }
+	result, err := app.zeebeClient.StartWorkflow(ctx, store.KantorNgetesIdProcessDefinitionKey, variables)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 
-	//if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
-	//	app.internalServerError(w, r, err)
-	//	return
-	//}
+	model := &store.KantorNgetesId{
+		ProcessDefinitionKey: result.GetProcessDefinitionKey(),
+		Version:              result.GetVersion(),
+		ProcessInstanceKey:   result.GetProcessInstanceKey(),
+		ResourceName:         store.KantorNgetesIdResourceName,
+	}
+
+	if err := app.store.KantorNgetesId.Create(ctx, model); err != nil {
+		if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/damarteplok/social/internal/store"
 )
 
 func NewZeebeClientRest(clientID, clientSecret, authServerURL, zeebeAddr string) (*ZeebeClientRest, error) {
@@ -51,6 +53,10 @@ func (z *ZeebeClientRest) SendRequest(ctx context.Context, method, endpoint stri
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, store.ErrNotFound
+	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("request failed with status: %d", resp.StatusCode)

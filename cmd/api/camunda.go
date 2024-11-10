@@ -2,16 +2,24 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/damarteplok/social/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 
 const (
+	StateCreated       = "CREATED"
+	StateCompleted     = "COMPLETED"
+	StateCanceled      = "CANCELED"
+	StateFailed        = "FAILED"
 	ProcessInstanceUrl = "/v2/process-instances"
+	V1TasklistUrl      = "/v1/tasks"
 )
 
 // Deploy godoc
@@ -196,9 +204,17 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 	}
 
 	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
 	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ProcessInstanceUrl, bytes.NewBuffer(body))
 	if err != nil {
-		app.internalServerError(w, r, err)
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
 
@@ -235,14 +251,75 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
 	url := ProcessInstanceUrl + "/" + strconv.Itoa(int(processInstanceKey)) + "/cancellation"
 	_, err = app.zeebeClientRest.SendRequest(ctx, "POST", url, bytes.NewBufferString("{}"))
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, "cancelled success"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Search TaskList godoc
+//
+//	@Summary		Search TaskList form rest api
+//	@Description	Search TaskList form rest api
+//	@Tags			camunda
+//	@Accept			json
+//	@produce		json
+//	@Param			payload	body		SearchTaskListPayload	true	"Search TaskList Payload"
+//	@Success		200		{object}	SearchTaskListPayload
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/tasklist  [post]
+func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Request) {
+	var payload SearchTaskListPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	body, err := json.Marshal(payload)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, "cancelled success"); err != nil {
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	url := V1TasklistUrl + "/search"
+	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, resp); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

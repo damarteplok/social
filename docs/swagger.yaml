@@ -151,6 +151,64 @@ definitions:
     - password
     - username
     type: object
+  main.SearchTaskListPayload:
+    properties:
+      assgined:
+        type: boolean
+      assignee:
+        type: string
+      assignees:
+        items:
+          type: string
+        type: array
+      candidateGroup:
+        type: string
+      candidateGroups:
+        items:
+          type: string
+        type: array
+      candidateUser:
+        type: string
+      candidateUsers:
+        items:
+          type: string
+        type: array
+      pageSize:
+        type: integer
+      processDefinitionKey:
+        type: string
+      processInstanceKey:
+        type: string
+      searchAfter:
+        items:
+          type: string
+        type: array
+      searchAfterOrEqual:
+        items:
+          type: string
+        type: array
+      searchBefore:
+        items:
+          type: string
+        type: array
+      searchBeforeOrEqual:
+        items:
+          type: string
+        type: array
+      sort:
+        $ref: '#/definitions/main.SortSearchTasklist'
+      state:
+        type: string
+      taskDefinitionId:
+        type: string
+    type: object
+  main.SortSearchTasklist:
+    properties:
+      field:
+        type: string
+      order:
+        type: string
+    type: object
   main.StartInstruction:
     properties:
       elementId:
@@ -525,6 +583,36 @@ paths:
       security:
       - BasicAuth: []
       summary: Deploy Bpmn Camunda
+      tags:
+      - camunda
+  /camunda/tasklist:
+    post:
+      consumes:
+      - application/json
+      description: Search TaskList form rest api
+      parameters:
+      - description: Search TaskList Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.SearchTaskListPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.SearchTaskListPayload'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Search TaskList form rest api
       tags:
       - camunda
   /health:
