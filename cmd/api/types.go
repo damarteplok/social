@@ -165,8 +165,8 @@ type CreateProcessInstancesResponse struct {
 }
 
 type SortSearchTasklist struct {
-	Field string
-	Order string
+	Field string `json:"field,omitempty"`
+	Order string `json:"order,omitempty"`
 }
 
 type SearchTaskListPayload struct {

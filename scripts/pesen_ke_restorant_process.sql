@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS kantor_ngetes_id (
+CREATE TABLE IF NOT EXISTS pesen_ke_restorant (
 	id BIGSERIAL PRIMARY KEY,
 	process_definition_key BIGINT NOT NULL,
 	version INT NOT NULL,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS kantor_ngetes_id (
 	deleted_at TIMESTAMP(0) WITH TIME ZONE
 )
 
-DROP TABLE IF EXISTS kantor_ngetes_id;
+DROP TABLE IF EXISTS pesen_ke_restorant;
 	

@@ -46,17 +46,29 @@ type Storage struct {
 	}
 	KantorNgetesId interface {
 		Create(context.Context, *KantorNgetesId) error
+		Delete(context.Context, int64) error
+	}
+	PesenKeRestorant interface {
+		Create(context.Context, *PesenKeRestorant) error
+		Delete(context.Context, int64) error
+	}
+	Process1hti3q2 interface {
+		Create(context.Context, *Process1hti3q2) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*Process1hti3q2, error)
 	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:          &PostStore{db},
-		Users:          &UserStore{db},
-		Comments:       &CommentStore{db},
-		Followers:      &FollowerStore{db},
-		Roles:          &RoleStore{db},
-		KantorNgetesId: &KantorNgetesIdStore{db},
+		Posts:            &PostStore{db},
+		Users:            &UserStore{db},
+		Comments:         &CommentStore{db},
+		Followers:        &FollowerStore{db},
+		Roles:            &RoleStore{db},
+		KantorNgetesId:   &KantorNgetesIdStore{db},
+		PesenKeRestorant: &PesenKeRestorantStore{db},
+		Process1hti3q2:   &Process1hti3q2Store{db},
 	}
 }
 

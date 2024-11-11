@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	KantorNgetesIdVersion              = 8
-	KantorNgetesIdProcessDefinitionKey = 2251799813928564
-	KantorNgetesIdResourceName         = "bikin_something.bpmn"
+	Process1hti3q2Version              = 2
+	Process1hti3q2ProcessDefinitionKey = 2251799813928767
+	Process1hti3q2ResourceName         = "ngetes_lah_1.bpmn"
 )
 
 // TODO: UPDATE THIS STRUCT AND CODE BELOW
-type KantorNgetesId struct {
+type Process1hti3q2 struct {
 	ID                   int64   `json:"id"`
 	ProcessDefinitionKey int64   `json:"process_definition_key"`
 	Version              int32   `json:"version"`
@@ -26,11 +26,11 @@ type KantorNgetesId struct {
 	DeletedAt            *string `json:"deleted_at"`
 }
 
-type KantorNgetesIdStore struct {
+type Process1hti3q2Store struct {
 	db *sql.DB
 }
 
-func (s *KantorNgetesIdStore) Create(ctx context.Context, model *KantorNgetesId) error {
+func (s *Process1hti3q2Store) Create(ctx context.Context, model *Process1hti3q2) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.create(ctx, tx, model); err != nil {
 			return err
@@ -39,7 +39,7 @@ func (s *KantorNgetesIdStore) Create(ctx context.Context, model *KantorNgetesId)
 	})
 }
 
-func (s *KantorNgetesIdStore) Delete(ctx context.Context, id int64) error {
+func (s *Process1hti3q2Store) Delete(ctx context.Context, id int64) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.delete(ctx, tx, id); err != nil {
 			return err
@@ -48,7 +48,7 @@ func (s *KantorNgetesIdStore) Delete(ctx context.Context, id int64) error {
 	})
 }
 
-func (s *KantorNgetesIdStore) Update(ctx context.Context, model *KantorNgetesId) error {
+func (s *Process1hti3q2Store) Update(ctx context.Context, model *Process1hti3q2) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.update(ctx, tx, model); err != nil {
 			return err
@@ -57,13 +57,13 @@ func (s *KantorNgetesIdStore) Update(ctx context.Context, model *KantorNgetesId)
 	})
 }
 
-func (s *KantorNgetesIdStore) create(ctx context.Context, tx *sql.Tx, model *KantorNgetesId) error {
-	// model.Version = 8
-	// model.ProcessDefinitionKey = 2251799813928564
-	model.ResourceName = "bikin_something.bpmn"
+func (s *Process1hti3q2Store) create(ctx context.Context, tx *sql.Tx, model *Process1hti3q2) error {
+	// model.Version = 2
+	// model.ProcessDefinitionKey = 2251799813928767
+	model.ResourceName = "ngetes_lah_1.bpmn"
 
 	query := `
-		INSERT INTO kantor_ngetes_id (process_definition_key, version, resource_name, process_instance_key, created_by)
+		INSERT INTO Process_1hti3q2 (process_definition_key, version, resource_name, process_instance_key, created_by)
 		VALUES (
 			$1, 
 			$2, 
@@ -103,17 +103,17 @@ func (s *KantorNgetesIdStore) create(ctx context.Context, tx *sql.Tx, model *Kan
 	return nil
 }
 
-func (s *KantorNgetesIdStore) GetByID(ctx context.Context, id int64) (*KantorNgetesId, error) {
+func (s *Process1hti3q2Store) GetByID(ctx context.Context, id int64) (*Process1hti3q2, error) {
 	query := `
 		SELECT id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at, updated_at
-		FROM kantor_ngetes_id
+		FROM Process_1hti3q2
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	var model KantorNgetesId
+	var model Process1hti3q2
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&model.ID,
 		&model.ProcessDefinitionKey,
@@ -136,8 +136,8 @@ func (s *KantorNgetesIdStore) GetByID(ctx context.Context, id int64) (*KantorNge
 	return &model, nil
 }
 
-func (s *KantorNgetesIdStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
-	query := `UPDATE kantor_ngetes_id SET deleted_at = NOW() WHERE id = $1;`
+func (s *Process1hti3q2Store) delete(ctx context.Context, tx *sql.Tx, id int64) error {
+	query := `UPDATE Process_1hti3q2 SET deleted_at = NOW() WHERE id = $1;`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -159,9 +159,9 @@ func (s *KantorNgetesIdStore) delete(ctx context.Context, tx *sql.Tx, id int64) 
 	return nil
 }
 
-func (s *KantorNgetesIdStore) update(ctx context.Context, tx *sql.Tx, model *KantorNgetesId) error {
+func (s *Process1hti3q2Store) update(ctx context.Context, tx *sql.Tx, model *Process1hti3q2) error {
 	query := `
-		UPDATE kantor_ngetes_id
+		UPDATE Process_1hti3q2
 		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_by = $5, updated_at = NOW()
 		WHERE id = $4 AND deleted_at IS NULL
 		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at updated_at;

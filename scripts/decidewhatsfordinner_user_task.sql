@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS bikinsomething (
+CREATE TABLE IF NOT EXISTS decidewhatsfordinner (
 	id BIGSERIAL PRIMARY KEY,
 	name VARCHAR(256) NOT NULL,
 	form_id VARCHAR(256),
@@ -10,10 +10,10 @@ CREATE TABLE IF NOT EXISTS bikinsomething (
 	deleted_at TIMESTAMP(0) WITH TIME ZONE
 );
 
-DROP TABLE IF EXISTS bikinsomething;
+DROP TABLE IF EXISTS decidewhatsfordinner;
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
-CREATE INDEX IF NOT EXISTS idx_bikinsomething_properties ON bikinsomething USING gin (properties);
+CREATE INDEX IF NOT EXISTS idx_decidewhatsfordinner_properties ON decidewhatsfordinner USING gin (properties);
 
 	

@@ -1,27 +1,32 @@
 package store
+
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 )
 
 const (
-	ReviewSomethingID = "review_something"
-	ReviewSomethingName = "review something"
-	ReviewSomethingFormID = "review_bikin_something"
-	ReviewSomethingAssignee = "atasan_1"
-	ReviewSomethingCandidateGroup = "atasan_1"
-	ReviewSomethingCandidateUser = "atasan_1"
-	ReviewSomethingSchedule = ``
-
+	ReviewSomethingID             = "review_something"
+	ReviewSomethingName           = "review something"
+	ReviewSomethingFormID         = "review_bikin_something"
+	ReviewSomethingAssignee       = ""
+	ReviewSomethingCandidateGroup = ""
+	ReviewSomethingCandidateUser  = ""
+	ReviewSomethingSchedule       = ``
 )
 
 type ReviewSomething struct {
-    ID int64 `json:"id"`
-	Name string  `json:"name"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	DeletedAt *string `json:"deleted_at"`
+	ID         int64    `json:"id"`
+	Name       string   `json:"name"`
+	FormId     string   `json:"form_id"`
+	Properties []string `json:"properties"`
+	CreatedBy  int64    `json:"created_by"`
+	UpdatedBy  *int64   `json:"updated_by"`
+	CreatedAt  string   `json:"created_at"`
+	UpdatedAt  string   `json:"updated_at"`
+	DeletedAt  *string  `json:"deleted_at"`
 }
 
 type ReviewSomethingStore struct {
@@ -43,7 +48,7 @@ func (s *ReviewSomethingStore) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 		return nil
-	})	
+	})
 }
 
 func (s *ReviewSomethingStore) Update(ctx context.Context, model *ReviewSomething) error {
@@ -54,26 +59,47 @@ func (s *ReviewSomethingStore) Update(ctx context.Context, model *ReviewSomethin
 		return nil
 	})
 }
-	
+
 func (s *ReviewSomethingStore) create(ctx context.Context, tx *sql.Tx, model *ReviewSomething) error {
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
+
 	query := `
-		INSERT INTO reviewsomething (name)
+		INSERT INTO reviewsomething (name, form_id, properties, created_by)
 		VALUES (
-			$1
+			$1,
+			$2,
+			$3,
+			$4
 		) RETURNING 
-		 	id, name, 
+		 	id, name, form_id, properties, created_by, updated_by,
 			created_at, updated_at
 		`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.CreatedBy,
+		model.UpdatedAt,
 	).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -86,7 +112,7 @@ func (s *ReviewSomethingStore) create(ctx context.Context, tx *sql.Tx, model *Re
 
 func (s *ReviewSomethingStore) GetByID(ctx context.Context, id int64) (*ReviewSomething, error) {
 	query := `
-		SELECT id, name, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
 		FROM reviewsomething
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -95,9 +121,14 @@ func (s *ReviewSomethingStore) GetByID(ctx context.Context, id int64) (*ReviewSo
 	defer cancel()
 
 	var model ReviewSomething
+	var propertiesData []byte
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -109,6 +140,15 @@ func (s *ReviewSomethingStore) GetByID(ctx context.Context, id int64) (*ReviewSo
 			return nil, err
 		}
 	}
+
+	if len(propertiesData) > 0 {
+		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
+			return nil, err
+		}
+	} else {
+		model.Properties = []string{}
+	}
+
 	return &model, nil
 }
 
@@ -136,22 +176,34 @@ func (s *ReviewSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64)
 }
 
 func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *ReviewSomething) error {
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
 	query := `
 		UPDATE reviewsomething
-		SET name = $1, updated_at = NOW()
-		WHERE id = $2 AND deleted_at IS NULL
-		RETURNING id, name, created_at updated_at;
+		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
+		WHERE id = $5 AND deleted_at IS NULL
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -163,4 +215,3 @@ func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Re
 
 	return nil
 }
-

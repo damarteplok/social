@@ -8,16 +8,16 @@ import (
 )
 
 const (
-	BikinSomethingID             = "bikin_something"
-	BikinSomethingName           = "bikin something"
-	BikinSomethingFormID         = "form_bikin_something"
-	BikinSomethingAssignee       = ""
-	BikinSomethingCandidateGroup = ""
-	BikinSomethingCandidateUser  = ""
-	BikinSomethingSchedule       = ``
+	DecideWhatsForDinnerID             = "decide_dinner"
+	DecideWhatsForDinnerName           = "decide whats for dinner"
+	DecideWhatsForDinnerFormID         = "form_decide_what_for_dinner"
+	DecideWhatsForDinnerAssignee       = ""
+	DecideWhatsForDinnerCandidateGroup = ""
+	DecideWhatsForDinnerCandidateUser  = ""
+	DecideWhatsForDinnerSchedule       = ``
 )
 
-type BikinSomething struct {
+type DecideWhatsForDinner struct {
 	ID         int64    `json:"id"`
 	Name       string   `json:"name"`
 	FormId     string   `json:"form_id"`
@@ -29,11 +29,11 @@ type BikinSomething struct {
 	DeletedAt  *string  `json:"deleted_at"`
 }
 
-type BikinSomethingStore struct {
+type DecideWhatsForDinnerStore struct {
 	db *sql.DB
 }
 
-func (s *BikinSomethingStore) Create(ctx context.Context, model *BikinSomething) error {
+func (s *DecideWhatsForDinnerStore) Create(ctx context.Context, model *DecideWhatsForDinner) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.create(ctx, tx, model); err != nil {
 			return err
@@ -42,7 +42,7 @@ func (s *BikinSomethingStore) Create(ctx context.Context, model *BikinSomething)
 	})
 }
 
-func (s *BikinSomethingStore) Delete(ctx context.Context, id int64) error {
+func (s *DecideWhatsForDinnerStore) Delete(ctx context.Context, id int64) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.delete(ctx, tx, id); err != nil {
 			return err
@@ -51,7 +51,7 @@ func (s *BikinSomethingStore) Delete(ctx context.Context, id int64) error {
 	})
 }
 
-func (s *BikinSomethingStore) Update(ctx context.Context, model *BikinSomething) error {
+func (s *DecideWhatsForDinnerStore) Update(ctx context.Context, model *DecideWhatsForDinner) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		if err := s.update(ctx, tx, model); err != nil {
 			return err
@@ -60,7 +60,7 @@ func (s *BikinSomethingStore) Update(ctx context.Context, model *BikinSomething)
 	})
 }
 
-func (s *BikinSomethingStore) create(ctx context.Context, tx *sql.Tx, model *BikinSomething) error {
+func (s *DecideWhatsForDinnerStore) create(ctx context.Context, tx *sql.Tx, model *DecideWhatsForDinner) error {
 	if model.Properties == nil {
 		model.Properties = []string{}
 	}
@@ -71,7 +71,7 @@ func (s *BikinSomethingStore) create(ctx context.Context, tx *sql.Tx, model *Bik
 	}
 
 	query := `
-		INSERT INTO bikinsomething (name, form_id, properties, created_by)
+		INSERT INTO decidewhatsfordinner (name, form_id, properties, created_by)
 		VALUES (
 			$1,
 			$2,
@@ -110,17 +110,17 @@ func (s *BikinSomethingStore) create(ctx context.Context, tx *sql.Tx, model *Bik
 	return nil
 }
 
-func (s *BikinSomethingStore) GetByID(ctx context.Context, id int64) (*BikinSomething, error) {
+func (s *DecideWhatsForDinnerStore) GetByID(ctx context.Context, id int64) (*DecideWhatsForDinner, error) {
 	query := `
 		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
-		FROM bikinsomething
+		FROM decidewhatsfordinner
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	var model BikinSomething
+	var model DecideWhatsForDinner
 	var propertiesData []byte
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&model.ID,
@@ -152,8 +152,8 @@ func (s *BikinSomethingStore) GetByID(ctx context.Context, id int64) (*BikinSome
 	return &model, nil
 }
 
-func (s *BikinSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
-	query := `UPDATE bikinsomething SET deleted_at = NOW() WHERE id = $1;`
+func (s *DecideWhatsForDinnerStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
+	query := `UPDATE decidewhatsfordinner SET deleted_at = NOW() WHERE id = $1;`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -175,7 +175,7 @@ func (s *BikinSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64) 
 	return nil
 }
 
-func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *BikinSomething) error {
+func (s *DecideWhatsForDinnerStore) update(ctx context.Context, tx *sql.Tx, model *DecideWhatsForDinner) error {
 	if model.Properties == nil {
 		model.Properties = []string{}
 	}
@@ -185,7 +185,7 @@ func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Bik
 		return errProperties
 	}
 	query := `
-		UPDATE bikinsomething
+		UPDATE decidewhatsfordinner
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
 		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;

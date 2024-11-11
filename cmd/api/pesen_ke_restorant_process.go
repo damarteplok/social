@@ -10,34 +10,34 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type CreateKantorNgetesIdPayload struct {
+type CreatePesenKeRestorantPayload struct {
 	Variables *map[string]string `json:"variables,omitempty"`
 }
-type UpdateKantorNgetesIdPayload struct {
+type UpdatePesenKeRestorantPayload struct {
 	Variables *map[string]string `json:"variables,omitempty"`
 }
-type DataStoreKantorNgetesIdWrapper struct {
-	Data store.KantorNgetesId `json:"data"`
+type DataStorePesenKeRestorantWrapper struct {
+	Data store.PesenKeRestorant `json:"data"`
 }
 
 // TODO: U CAN ADD MORE HANDLER LIKE THIS EXAMPLE
 
-// Create KantorNgetesId godoc
+// Create PesenKeRestorant godoc
 //
-//	@Summary		Create KantorNgetesId
-//	@Description	Create KantorNgetesId
+//	@Summary		Create PesenKeRestorant
+//	@Description	Create PesenKeRestorant
 //	@Tags			bpmn
 //	@Accept			json
 //	@produce		json
-//	@Param			payload	body		CreateKantorNgetesIdPayload		true	"KantorNgetesId Payload"
-//	@Success		201		{object}	DataStoreKantorNgetesIdWrapper	"KantorNgetesId Created"
+//	@Param			payload	body		CreatePesenKeRestorantPayload		true	"PesenKeRestorant Payload"
+//	@Success		201		{object}	DataStorePesenKeRestorantWrapper	"PesenKeRestorant Created"
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/bpmn/kantor_ngetes_id  [post]
-func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *http.Request) {
+//	@Router			/bpmn/pesen_ke_restorant  [post]
+func (app *application) createPesenKeRestorantHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
-	var payload CreateKantorNgetesIdPayload
+	var payload CreatePesenKeRestorantPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -64,21 +64,21 @@ func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 		}
 	}
 
-	resp, err := app.zeebeClient.StartWorkflow(ctx, store.KantorNgetesIdProcessDefinitionKey, variables)
+	resp, err := app.zeebeClient.StartWorkflow(ctx, store.PesenKeRestorantProcessDefinitionKey, variables)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	model := &store.KantorNgetesId{
+	model := &store.PesenKeRestorant{
 		ProcessDefinitionKey: resp.GetProcessDefinitionKey(),
 		Version:              resp.GetVersion(),
 		ProcessInstanceKey:   resp.GetProcessInstanceKey(),
-		ResourceName:         store.KantorNgetesIdResourceName,
+		ResourceName:         store.PesenKeRestorantResourceName,
 		CreatedBy:            user.ID,
 	}
 
-	if err := app.store.KantorNgetesId.Create(ctx, model); err != nil {
+	if err := app.store.PesenKeRestorant.Create(ctx, model); err != nil {
 		if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
 			app.internalServerError(w, r, err)
 			return
@@ -93,20 +93,20 @@ func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 	}
 }
 
-// Cancel KantorNgetesId godoc
+// Cancel PesenKeRestorant godoc
 //
-//	@Summary		Cancel KantorNgetesId
-//	@Description	Cancel KantorNgetesId
+//	@Summary		Cancel PesenKeRestorant
+//	@Description	Cancel PesenKeRestorant
 //	@Tags			bpmn
 //	@Accept			json
 //	@produce		json
 //	@Param			processInstanceKey	path		int		true	"ProcessInstanceKey"
-//	@Success		200					{string}	string	"KantorNgetesId Canceled"
+//	@Success		200					{string}	string	"PesenKeRestorant Canceled"
 //	@Failure		400					{object}	error
 //	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/bpmn/kantor_ngetes_id/{processInstanceKey}  [delete]
-func (app *application) cancelKantorNgetesIdHandler(w http.ResponseWriter, r *http.Request) {
+//	@Router			/bpmn/pesen_ke_restorant/{processInstanceKey}  [delete]
+func (app *application) cancelPesenKeRestorantHandler(w http.ResponseWriter, r *http.Request) {
 	processInstanceKey, err := strconv.ParseInt(chi.URLParam(r, "processinstanceKey"), 10, 64)
 	if err != nil || processInstanceKey < 1 {
 		app.badRequestResponse(w, r, err)

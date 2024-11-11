@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1dbskmr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.25.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.5.0">
+  <bpmn:collaboration id="Collaboration_1dwklj1">
+    <bpmn:participant id="Participant_0x9oqrm" name="pesen makan" processRef="pesen_ke_restorant">
+      <bpmn:documentation>buat ngetest ae</bpmn:documentation>
+    </bpmn:participant>
+  </bpmn:collaboration>
+  <bpmn:process id="pesen_ke_restorant" name="pesen_ke_restorant" isExecutable="true">
+    <bpmn:documentation>buat ngetes ae</bpmn:documentation>
+    <bpmn:extensionElements>
+      <zeebe:properties>
+        <zeebe:property name="test_extension" value="test_extension" />
+      </zeebe:properties>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="pelanggan_masuk" name="pelanggan">
+      <bpmn:extensionElements />
+      <bpmn:outgoing>Flow_1lkwht0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="decide_dinner" name="decide whats for dinner">
+      <bpmn:documentation>{"meal": ["Chicken", "Salad"]}</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_decide_what_for_dinner" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1lkwht0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0o6bhz2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_13fy64t">
+      <bpmn:incoming>Flow_0o6bhz2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0w22fn0</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0f0j033</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="prepare_salad" name="prepare salad">
+      <bpmn:incoming>Flow_0f0j033</bpmn:incoming>
+      <bpmn:outgoing>Flow_1a609f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_00jwln6">
+      <bpmn:incoming>Flow_0ev97kg</bpmn:incoming>
+      <bpmn:incoming>Flow_1a609f3</bpmn:incoming>
+      <bpmn:outgoing>Flow_1kc31zs</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="Gateway_01xv5hq">
+      <bpmn:incoming>Flow_1kc31zs</bpmn:incoming>
+      <bpmn:outgoing>Flow_0i370cg</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0onsp3z</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="kirim_notif_email" name="kirim notif telegram">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="service-notif" retries="=5" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0i370cg</bpmn:incoming>
+      <bpmn:outgoing>Flow_176jkk0</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="Gateway_18b52v8">
+      <bpmn:incoming>Flow_19s1278</bpmn:incoming>
+      <bpmn:incoming>Flow_176jkk0</bpmn:incoming>
+      <bpmn:outgoing>Flow_1m3s7c6</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="kirim_payment" name="kirim payment">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="service-payment" retries="5" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1m3s7c6</bpmn:incoming>
+      <bpmn:incoming>Flow_1vx5r0k</bpmn:incoming>
+      <bpmn:outgoing>Flow_1a5rjn7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1lkwht0" sourceRef="pelanggan_masuk" targetRef="decide_dinner" />
+    <bpmn:sequenceFlow id="Flow_0o6bhz2" sourceRef="decide_dinner" targetRef="Gateway_13fy64t" />
+    <bpmn:sequenceFlow id="Flow_0w22fn0" sourceRef="Gateway_13fy64t" targetRef="prepare_chicken">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=meal="Chicken"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0f0j033" sourceRef="Gateway_13fy64t" targetRef="prepare_salad">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=meal="Salad"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0ev97kg" sourceRef="prepare_chicken" targetRef="Gateway_00jwln6" />
+    <bpmn:sequenceFlow id="Flow_1a609f3" sourceRef="prepare_salad" targetRef="Gateway_00jwln6" />
+    <bpmn:sequenceFlow id="Flow_1kc31zs" sourceRef="Gateway_00jwln6" targetRef="Gateway_01xv5hq" />
+    <bpmn:sequenceFlow id="Flow_0i370cg" sourceRef="Gateway_01xv5hq" targetRef="kirim_notif_email" />
+    <bpmn:sequenceFlow id="Flow_0onsp3z" sourceRef="Gateway_01xv5hq" targetRef="minta_biling" />
+    <bpmn:sequenceFlow id="Flow_19s1278" sourceRef="minta_biling" targetRef="Gateway_18b52v8" />
+    <bpmn:sequenceFlow id="Flow_176jkk0" sourceRef="kirim_notif_email" targetRef="Gateway_18b52v8" />
+    <bpmn:sequenceFlow id="Flow_1m3s7c6" sourceRef="Gateway_18b52v8" targetRef="kirim_payment" />
+    <bpmn:task id="prepare_chicken" name="prepare chicken">
+      <bpmn:incoming>Flow_0w22fn0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ev97kg</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1a5rjn7" sourceRef="kirim_payment" targetRef="Event_0dimwgx" />
+    <bpmn:endEvent id="Event_0dimwgx" name="kirim email cc ke pemilik">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="service-notif-message-end" retries="5" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1a5rjn7</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0kz322m" />
+    </bpmn:endEvent>
+    <bpmn:intermediateCatchEvent id="shopee_masuk" name="shopee masuk">
+      <bpmn:outgoing>Flow_1vx5r0k</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0wkya2l" messageRef="Message_1268178" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1vx5r0k" sourceRef="shopee_masuk" targetRef="kirim_payment" />
+    <bpmn:userTask id="minta_biling" name="bayar billing">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_minta_billing" />
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0onsp3z</bpmn:incoming>
+      <bpmn:outgoing>Flow_19s1278</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmn:message id="Message_1nhiosf" name="Message_1nhiosf" />
+  <bpmn:message id="Message_1268178" name="shopee_masuk">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=shopee_masuk=true" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1dwklj1">
+      <bpmndi:BPMNShape id="Participant_0x9oqrm_di" bpmnElement="Participant_0x9oqrm" isHorizontal="true">
+        <dc:Bounds x="129" y="80" width="1281" height="730" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="pelanggan_masuk">
+        <dc:Bounds x="179" y="339" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="172" y="382" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ph6mj0_di" bpmnElement="decide_dinner">
+        <dc:Bounds x="270" y="317" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_13fy64t_di" bpmnElement="Gateway_13fy64t" isMarkerVisible="true">
+        <dc:Bounds x="425" y="332" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="302" width="10" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_11e687k_di" bpmnElement="prepare_salad">
+        <dc:Bounds x="530" y="430" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_00jwln6_di" bpmnElement="Gateway_00jwln6" isMarkerVisible="true">
+        <dc:Bounds x="685" y="332" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0cy979e_di" bpmnElement="Gateway_01xv5hq">
+        <dc:Bounds x="765" y="332" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0706yc6_di" bpmnElement="kirim_notif_email">
+        <dc:Bounds x="840" y="210" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_077x6mu_di" bpmnElement="Gateway_18b52v8">
+        <dc:Bounds x="985" y="332" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0nllde4_di" bpmnElement="kirim_payment">
+        <dc:Bounds x="1080" y="317" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dcdnrz_di" bpmnElement="prepare_chicken">
+        <dc:Bounds x="530" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_09wik2u_di" bpmnElement="Event_0dimwgx">
+        <dc:Bounds x="1282" y="339" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1262" y="382" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_01jr9a0_di" bpmnElement="shopee_masuk">
+        <dc:Bounds x="1112" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1095" y="565" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ma93hq_di" bpmnElement="minta_biling">
+        <dc:Bounds x="840" y="430" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1lkwht0_di" bpmnElement="Flow_1lkwht0">
+        <di:waypoint x="215" y="357" />
+        <di:waypoint x="270" y="357" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0o6bhz2_di" bpmnElement="Flow_0o6bhz2">
+        <di:waypoint x="370" y="357" />
+        <di:waypoint x="425" y="357" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0w22fn0_di" bpmnElement="Flow_0w22fn0">
+        <di:waypoint x="450" y="332" />
+        <di:waypoint x="450" y="260" />
+        <di:waypoint x="530" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0f0j033_di" bpmnElement="Flow_0f0j033">
+        <di:waypoint x="450" y="382" />
+        <di:waypoint x="450" y="470" />
+        <di:waypoint x="530" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ev97kg_di" bpmnElement="Flow_0ev97kg">
+        <di:waypoint x="630" y="260" />
+        <di:waypoint x="710" y="260" />
+        <di:waypoint x="710" y="332" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1a609f3_di" bpmnElement="Flow_1a609f3">
+        <di:waypoint x="630" y="470" />
+        <di:waypoint x="710" y="470" />
+        <di:waypoint x="710" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1kc31zs_di" bpmnElement="Flow_1kc31zs">
+        <di:waypoint x="735" y="357" />
+        <di:waypoint x="765" y="357" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0i370cg_di" bpmnElement="Flow_0i370cg">
+        <di:waypoint x="790" y="330" />
+        <di:waypoint x="790" y="250" />
+        <di:waypoint x="840" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0onsp3z_di" bpmnElement="Flow_0onsp3z">
+        <di:waypoint x="790" y="382" />
+        <di:waypoint x="790" y="470" />
+        <di:waypoint x="840" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19s1278_di" bpmnElement="Flow_19s1278">
+        <di:waypoint x="940" y="470" />
+        <di:waypoint x="1010" y="470" />
+        <di:waypoint x="1010" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_176jkk0_di" bpmnElement="Flow_176jkk0">
+        <di:waypoint x="940" y="250" />
+        <di:waypoint x="1010" y="250" />
+        <di:waypoint x="1010" y="332" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1m3s7c6_di" bpmnElement="Flow_1m3s7c6">
+        <di:waypoint x="1035" y="357" />
+        <di:waypoint x="1080" y="357" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1a5rjn7_di" bpmnElement="Flow_1a5rjn7">
+        <di:waypoint x="1180" y="357" />
+        <di:waypoint x="1282" y="357" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vx5r0k_di" bpmnElement="Flow_1vx5r0k">
+        <di:waypoint x="1130" y="522" />
+        <di:waypoint x="1130" y="397" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

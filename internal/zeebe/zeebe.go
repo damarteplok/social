@@ -251,13 +251,22 @@ func generateCrudUserTask(userTask UserTask) error {
 	scriptCode := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	id BIGSERIAL PRIMARY KEY,
 	name VARCHAR(256) NOT NULL,
+	form_id VARCHAR(256),
+	properties JSONB,
+	created_by BIGINT NOT NULL,
+	updated_by BIGINT,
 	created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	deleted_at TIMESTAMP(0) WITH TIME ZONE
 );
 
 DROP TABLE IF EXISTS %s;
-	`, nameFile, nameFile)
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS idx_%s_properties ON %s USING gin (properties);
+
+	`, nameFile, nameFile, nameFile, nameFile)
 
 	err := os.WriteFile(filePathScripts, []byte(scriptCode), 0o644)
 	if err != nil {
@@ -269,6 +278,7 @@ DROP TABLE IF EXISTS %s;
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 )
 
@@ -286,6 +296,10 @@ const (
 type %s struct {
     ID int64 `+"`json:\"id\"`"+`
 	Name string  `+"`json:\"name\"`"+`
+	FormId string  `+"`json:\"form_id\"`"+`
+	Properties []string  `+"`json:\"properties\"`"+`
+	CreatedBy int64 `+"`json:\"created_by\"`"+`
+	UpdatedBy *int64 `+"`json:\"updated_by\"`"+`
 	CreatedAt string `+"`json:\"created_at\"`"+`
 	UpdatedAt string `+"`json:\"updated_at\"`"+`
 	DeletedAt *string `+"`json:\"deleted_at\"`"+`
@@ -323,24 +337,45 @@ func (s *%sStore) Update(ctx context.Context, model *%s) error {
 }
 	
 func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
+
 	query := %s
-		INSERT INTO %s (name)
+		INSERT INTO %s (name, form_id, properties, created_by)
 		VALUES (
-			$1
+			$1,
+			$2,
+			$3,
+			$4
 		) RETURNING 
-		 	id, name, 
+		 	id, name, form_id, properties, created_by, updated_by,
 			created_at, updated_at
 		%s
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.CreatedBy,
+		model.UpdatedAt,
 	).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -353,7 +388,7 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
-		SELECT id, name, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
 	%s
@@ -362,9 +397,14 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	defer cancel()
 
 	var model %s
+	var propertiesData []byte
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -376,6 +416,15 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 			return nil, err
 		}
 	}
+		
+	if len(propertiesData) > 0 {
+		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
+			return nil, err
+		}
+	} else {
+		model.Properties = []string{}
+	}
+
 	return &model, nil
 }
 
@@ -403,22 +452,35 @@ func (s *%sStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
 }
 
 func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
+
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
 	query := %s
 		UPDATE %s
-		SET name = $1, updated_at = NOW()
-		WHERE id = $2 AND deleted_at IS NULL
-		RETURNING id, name, created_at updated_at;
+		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
+		WHERE id = $5 AND deleted_at IS NULL
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -468,6 +530,7 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		nameFile,
 		"`",
 		userTaskName,
+
 		userTaskName,
 		"`",
 		nameFile,
@@ -498,6 +561,8 @@ func generateCrudProcess(processName, resourceName, tableName string, version in
 	version INT NOT NULL,
 	resource_name VARCHAR(256) NOT NULL,
 	process_instance_key BIGINT,
+	created_by BIGINT NOT NULL,
+	updated_by BIGINT,
 	created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	deleted_at TIMESTAMP(0) WITH TIME ZONE
@@ -531,6 +596,8 @@ type %s struct {
 	Version int32 `+"`json:\"version\"`"+`
 	ResourceName string `+"`json:\"resource_name\"`"+`
 	ProcessInstanceKey int64 `+"`json:\"process_instance_key\"`"+`
+	CreatedBy int64 `+"`json:\"created_by\"`"+`
+	UpdatedBy *int64 `+"`json:\"updated_by\"`"+`
 	CreatedAt string `+"`json:\"created_at\"`"+`
 	UpdatedAt string `+"`json:\"updated_at\"`"+`
 	DeletedAt *string `+"`json:\"deleted_at\"`"+`
@@ -573,14 +640,15 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 	model.ResourceName = "%s"
 
 	query := %s
-		INSERT INTO %s (process_definition_key, version, resource_name, process_instance_key)
+		INSERT INTO %s (process_definition_key, version, resource_name, process_instance_key, created_by)
 		VALUES (
 			$1, 
 			$2, 
 			$3,
-			$4
+			$4,
+			$5
 		) RETURNING 
-		 	id, process_definition_key, version, resource_name, process_instance_key,
+		 	id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by,
 			created_at, updated_at
 		%s
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -593,12 +661,15 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 		model.Version,
 		model.ResourceName,
 		model.ProcessInstanceKey,
+		model.CreatedBy,
 	).Scan(
 		&model.ID,
 		&model.ProcessDefinitionKey,
 		&model.Version,
 		&model.ResourceName,
 		&model.ProcessInstanceKey,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -611,7 +682,7 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
-		SELECT id, process_definition_key, version, resource_name, process_instance_key, created_at, updated_at
+		SELECT id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
 	%s
@@ -626,6 +697,8 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 		&model.Version,
 		&model.ResourceName,
 		&model.ProcessInstanceKey,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -666,9 +739,9 @@ func (s *%sStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
 func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	query := %s
 		UPDATE %s
-		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_at = NOW()
+		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_by = $5, updated_at = NOW()
 		WHERE id = $4 AND deleted_at IS NULL
-		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_at updated_at;
+		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at updated_at;
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -681,8 +754,18 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		model.Version,
 		model.ResourceName,
 		model.ProcessInstanceKey,
+		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.ProcessDefinitionKey, &model.Version, &model.ResourceName, &model.ProcessInstanceKey, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.ProcessDefinitionKey, 
+		&model.Version, 
+		&model.ResourceName, 
+		&model.ProcessInstanceKey, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -744,8 +827,14 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	handlerCode := fmt.Sprintf(`package main
 
 import (
-    "net/http"
+	"context"
+	"errors"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/damarteplok/social/internal/store"
+	"github.com/go-chi/chi/v5"
 )
 
 type Create%sPayload struct {
@@ -774,6 +863,7 @@ type DataStore%sWrapper struct {
 //	@Security		ApiKeyAuth
 //	@Router			/bpmn/%s  [post]
 func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r)
 	var payload Create%sPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
@@ -790,6 +880,10 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 	
 	ctx := r.Context()
 	variables := make(map[string]interface{})
+	variables["user"] = user
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
 
 	if payload.Variables != nil {
 		for k, v := range *payload.Variables {
@@ -808,6 +902,7 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 		Version:              resp.GetVersion(),
 		ProcessInstanceKey:   resp.GetProcessInstanceKey(),
 		ResourceName:         store.%sResourceName,
+		CreatedBy:            user.ID,
 	}
 
 	if err := app.store.%s.Create(ctx, model); err != nil {
@@ -816,6 +911,104 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+
+// Cancel %s godoc
+//
+//	@Summary		Cancel %s
+//	@Description	Cancel %s
+//	@Tags			bpmn
+//	@Accept			json
+//	@produce		json
+//	@Param			id	path		int		true	"ProcessInstanceKey"
+//	@Success		200		{string}	string	"%s Canceled"
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/{id}  [delete]
+func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.store.%s.GetByID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	// TODO: add rollback if failed to cancel in zeebe
+	if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, "success"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+
+// GetById %s godoc
+//
+//	@Summary		GetById %s
+//	@Description	GetById %s
+//	@Tags			bpmn
+//	@Accept			json
+//	@produce		json
+//	@Param			id	path		int		true	"ID from table"
+//	@Success		200					{string}	string	"%s GetById"
+//	@Failure		400					{object}	error
+//	@Failure		404					{object}	error
+//	@Failure		500					{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/{id}  [get]
+func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.store.%s.GetByID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
 
@@ -847,6 +1040,23 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 		processName,
 		processName,
 		processName,
+		processName,
+		// cancel
+		processName,
+		processName,
+		processName,
+		processName,
+		tableName,
+		processName,
+		processName,
+
+		// get by id
+		processName,
+		processName,
+		processName,
+		processName,
+		processName,
+		tableName,
 		processName,
 	)
 

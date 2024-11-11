@@ -2,6 +2,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 )
 
@@ -9,9 +10,9 @@ const (
 	SetujuiSomethingID = "setujui_something"
 	SetujuiSomethingName = "setujui something"
 	SetujuiSomethingFormID = "setujui_form_id"
-	SetujuiSomethingAssignee = "atasan_2"
-	SetujuiSomethingCandidateGroup = "atasan_2"
-	SetujuiSomethingCandidateUser = "atasan_2"
+	SetujuiSomethingAssignee = ""
+	SetujuiSomethingCandidateGroup = ""
+	SetujuiSomethingCandidateUser = ""
 	SetujuiSomethingSchedule = ``
 
 )
@@ -19,6 +20,10 @@ const (
 type SetujuiSomething struct {
     ID int64 `json:"id"`
 	Name string  `json:"name"`
+	FormId string  `json:"form_id"`
+	Properties []string  `json:"properties"`
+	CreatedBy int64 `json:"created_by"`
+	UpdatedBy *int64 `json:"updated_by"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	DeletedAt *string `json:"deleted_at"`
@@ -56,24 +61,45 @@ func (s *SetujuiSomethingStore) Update(ctx context.Context, model *SetujuiSometh
 }
 	
 func (s *SetujuiSomethingStore) create(ctx context.Context, tx *sql.Tx, model *SetujuiSomething) error {
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
+
 	query := `
-		INSERT INTO setujuisomething (name)
+		INSERT INTO setujuisomething (name, form_id, properties, created_by)
 		VALUES (
-			$1
+			$1,
+			$2,
+			$3,
+			$4
 		) RETURNING 
-		 	id, name, 
+		 	id, name, form_id, properties, created_by, updated_by,
 			created_at, updated_at
 		`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.CreatedBy,
+		model.UpdatedAt,
 	).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -86,7 +112,7 @@ func (s *SetujuiSomethingStore) create(ctx context.Context, tx *sql.Tx, model *S
 
 func (s *SetujuiSomethingStore) GetByID(ctx context.Context, id int64) (*SetujuiSomething, error) {
 	query := `
-		SELECT id, name, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
 		FROM setujuisomething
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -95,9 +121,14 @@ func (s *SetujuiSomethingStore) GetByID(ctx context.Context, id int64) (*Setujui
 	defer cancel()
 
 	var model SetujuiSomething
+	var propertiesData []byte
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&model.ID,
 		&model.Name,
+		&model.FormId,
+		&propertiesData,
+		&model.CreatedBy,
+		&model.UpdatedBy,
 		&model.CreatedAt,
 		&model.UpdatedAt,
 	)
@@ -109,6 +140,15 @@ func (s *SetujuiSomethingStore) GetByID(ctx context.Context, id int64) (*Setujui
 			return nil, err
 		}
 	}
+		
+	if len(propertiesData) > 0 {
+		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
+			return nil, err
+		}
+	} else {
+		model.Properties = []string{}
+	}
+
 	return &model, nil
 }
 
@@ -136,22 +176,35 @@ func (s *SetujuiSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64
 }
 
 func (s *SetujuiSomethingStore) update(ctx context.Context, tx *sql.Tx, model *SetujuiSomething) error {
+
+	if model.Properties == nil {
+		model.Properties = []string{}
+	}
+
+	propertiesJSON, errProperties := json.Marshal(model.Properties)
+	if errProperties != nil {
+		return errProperties
+	}
 	query := `
 		UPDATE setujuisomething
-		SET name = $1, updated_at = NOW()
-		WHERE id = $2 AND deleted_at IS NULL
-		RETURNING id, name, created_at updated_at;
+		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
+		WHERE id = $5 AND deleted_at IS NULL
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	var propertiesData []byte
 	err := tx.QueryRowContext(
 		ctx,
 		query,
 		model.Name,
+		model.FormId,
+		propertiesJSON,
+		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

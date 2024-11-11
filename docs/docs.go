@@ -116,6 +116,145 @@ const docTemplate = `{
                 }
             }
         },
+        "/bpmn/Process_1hti3q2": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create Process1hti3q2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Create Process1hti3q2",
+                "parameters": [
+                    {
+                        "description": "Process1hti3q2 Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreateProcess1hti3q2Payload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Process1hti3q2 Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStoreProcess1hti3q2Wrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/Process_1hti3q2/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById Process1hti3q2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "GetById Process1hti3q2",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Process1hti3q2 GetById",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel Process1hti3q2",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Cancel Process1hti3q2",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Process1hti3q2 Canceled",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/bpmn/kantor_ngetes_id": {
             "post": {
                 "security": [
@@ -150,6 +289,143 @@ const docTemplate = `{
                         "description": "KantorNgetesId Created",
                         "schema": {
                             "$ref": "#/definitions/main.DataStoreKantorNgetesIdWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/kantor_ngetes_id/{processInstanceKey}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel KantorNgetesId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Cancel KantorNgetesId",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ProcessInstanceKey",
+                        "name": "processInstanceKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KantorNgetesId Canceled",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pesen_ke_restorant": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create PesenKeRestorant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Create PesenKeRestorant",
+                "parameters": [
+                    {
+                        "description": "PesenKeRestorant Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreatePesenKeRestorantPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "PesenKeRestorant Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStorePesenKeRestorantWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pesen_ke_restorant/{processInstanceKey}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel PesenKeRestorant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn"
+                ],
+                "summary": "Cancel PesenKeRestorant",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ProcessInstanceKey",
+                        "name": "processInstanceKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PesenKeRestorant Canceled",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -871,6 +1147,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main.CreatePesenKeRestorantPayload": {
+            "type": "object",
+            "properties": {
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "main.CreatePostPayload": {
             "type": "object",
             "required": [
@@ -891,6 +1178,17 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "main.CreateProcess1hti3q2Payload": {
+            "type": "object",
+            "properties": {
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -1012,11 +1310,27 @@ const docTemplate = `{
                 }
             }
         },
+        "main.DataStorePesenKeRestorantWrapper": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/store.PesenKeRestorant"
+                }
+            }
+        },
         "main.DataStorePostWrapper": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/store.Post"
+                }
+            }
+        },
+        "main.DataStoreProcess1hti3q2Wrapper": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/store.Process1hti3q2"
                 }
             }
         },
@@ -1250,6 +1564,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "created_by": {
+                    "type": "integer"
+                },
                 "deleted_at": {
                     "type": "string"
                 },
@@ -1267,6 +1584,44 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.PesenKeRestorant": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "type": "integer"
+                },
+                "process_instance_key": {
+                    "type": "integer"
+                },
+                "resource_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
                 },
                 "version": {
                     "type": "integer"
@@ -1307,6 +1662,41 @@ const docTemplate = `{
                     "$ref": "#/definitions/store.User"
                 },
                 "user_id": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.Process1hti3q2": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "type": "integer"
+                },
+                "process_instance_key": {
+                    "type": "integer"
+                },
+                "resource_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
                     "type": "integer"
                 },
                 "version": {

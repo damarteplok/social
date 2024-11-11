@@ -1,0 +1,165 @@
+{
+  "components": [
+    {
+      "text": "whats for dinner ?",
+      "label": "Text view",
+      "type": "text",
+      "layout": {
+        "row": "Row_10po7dk",
+        "columns": null
+      },
+      "id": "Field_17la1dc"
+    },
+    {
+      "values": [
+        {
+          "label": "Chicken",
+          "value": "Chicken"
+        },
+        {
+          "label": "Salad",
+          "value": "Salad"
+        }
+      ],
+      "label": "whats for dinner ?",
+      "type": "radio",
+      "layout": {
+        "row": "Row_08hrric",
+        "columns": 16
+      },
+      "id": "Field_0hrydb5",
+      "key": "meal",
+      "validate": {
+        "required": true
+      },
+      "disabled": false,
+      "readonly": false
+    },
+    {
+      "label": "test select",
+      "type": "select",
+      "layout": {
+        "row": "Row_1yjtmay",
+        "columns": 16
+      },
+      "id": "Field_0xsinfx",
+      "key": "selecttest",
+      "searchable": true,
+      "valuesExpression": "=[{\"label\": \"dollar\", \"value\": \"$\"}]",
+      "validate": {
+        "required": false
+      }
+    },
+    {
+      "label": "test checkbox",
+      "type": "checkbox",
+      "layout": {
+        "row": "Row_0rc8ycv",
+        "columns": null
+      },
+      "id": "Field_1880rg9",
+      "key": "checkboxtest",
+      "readonly": false,
+      "defaultValue": false
+    },
+    {
+      "label": "Text area",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_0fz01n3",
+        "columns": 16
+      },
+      "id": "Field_0u3h22j",
+      "key": "textareatest",
+      "validate": {
+        "minLength": 10,
+        "maxLength": 500
+      }
+    },
+    {
+      "subtype": "datetime",
+      "dateLabel": "Date",
+      "label": "Date time",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_161w4sf",
+        "columns": 16
+      },
+      "id": "Field_01shw5i",
+      "key": "datetimetest",
+      "timeLabel": "Time",
+      "timeSerializingFormat": "utc_offset",
+      "timeInterval": 15,
+      "use24h": true
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_16wyvul",
+        "columns": 16
+      },
+      "id": "Field_1goefyk",
+      "key": "textfieldtest",
+      "readonly": true,
+      "disabled": false,
+      "defaultValue": "asdasdasd"
+    },
+    {
+      "label": "Text field 2",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1iaz69g",
+        "columns": 16
+      },
+      "id": "Field_08jchv3",
+      "key": "textfieldtest2",
+      "validate": {
+        "minLength": 10,
+        "maxLength": 256
+      },
+      "properties": {}
+    },
+    {
+      "label": "Number",
+      "type": "number",
+      "layout": {
+        "row": "Row_01qh4qz",
+        "columns": null
+      },
+      "id": "Field_0ib7umk",
+      "key": "numbertes",
+      "decimalDigits": 2,
+      "increment": "10"
+    },
+    {
+      "action": "reset",
+      "label": "reset",
+      "type": "button",
+      "layout": {
+        "row": "Row_0qchu9g",
+        "columns": null
+      },
+      "id": "Field_1gymd8e"
+    },
+    {
+      "action": "submit",
+      "label": "ok",
+      "type": "button",
+      "layout": {
+        "row": "Row_0qchu9g",
+        "columns": null
+      },
+      "id": "Field_0bn6udc"
+    }
+  ],
+  "type": "default",
+  "id": "form_decide_what_for_dinner",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.5.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.25.0"
+  },
+  "schemaVersion": 16
+}

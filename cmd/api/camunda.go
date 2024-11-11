@@ -20,6 +20,8 @@ const (
 	StateFailed        = "FAILED"
 	ProcessInstanceUrl = "/v2/process-instances"
 	V1TasklistUrl      = "/v1/tasks"
+	ZeebeHost          = "http://localhost:8088"
+	TasklistHost       = "http://localhost:8088"
 )
 
 // Deploy godoc
@@ -204,7 +206,7 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 	}
 
 	ctx := r.Context()
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ProcessInstanceUrl, bytes.NewBuffer(body))
@@ -251,7 +253,7 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	url := ProcessInstanceUrl + "/" + strconv.Itoa(int(processInstanceKey)) + "/cancellation"
@@ -297,6 +299,16 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if payload.Sort.Field == "" {
+		payload.Sort.Field = "creationTime"
+	}
+	if payload.Sort.Order == "" {
+		payload.Sort.Order = "DESC"
+	}
+	if payload.State == "" {
+		payload.State = "CREATED"
+	}
+
 	body, err := json.Marshal(payload)
 	if err != nil {
 		app.internalServerError(w, r, err)
@@ -304,7 +316,7 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	url := V1TasklistUrl + "/search"
@@ -319,7 +331,7 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, resp); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, string(resp)); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
