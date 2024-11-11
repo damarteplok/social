@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,7 +22,7 @@ const (
 	ProcessInstanceUrl = "/v2/process-instances"
 	V1TasklistUrl      = "/v1/tasks"
 	ZeebeHost          = "http://localhost:8088"
-	TasklistHost       = "http://localhost:8088"
+	TasklistHost       = "http://localhost:8082"
 )
 
 // Deploy godoc
@@ -209,7 +210,7 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ProcessInstanceUrl, bytes.NewBuffer(body))
+	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ZeebeHost+ProcessInstanceUrl, bytes.NewBuffer(body))
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -257,7 +258,7 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 	defer cancel()
 
 	url := ProcessInstanceUrl + "/" + strconv.Itoa(int(processInstanceKey)) + "/cancellation"
-	_, err = app.zeebeClientRest.SendRequest(ctx, "POST", url, bytes.NewBufferString("{}"))
+	_, err = app.zeebeClientRest.SendRequest(ctx, "POST", ZeebeHost+url, bytes.NewBufferString("{}"))
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -299,12 +300,22 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if payload.Sort.Field == "" {
-		payload.Sort.Field = "creationTime"
+	if len(payload.Sort) > 1 {
+		for i := range payload.Sort {
+			if payload.Sort[i].Field == "" {
+				payload.Sort[i].Field = "creationTime"
+			}
+			if payload.Sort[i].Order == "" {
+				payload.Sort[i].Order = "DESC"
+			}
+		}
+	} else {
+		payload.Sort = append(payload.Sort, SortSearchTasklist{
+			Field: "creationTime",
+			Order: "DESC",
+		})
 	}
-	if payload.Sort.Order == "" {
-		payload.Sort.Order = "DESC"
-	}
+
 	if payload.State == "" {
 		payload.State = "CREATED"
 	}
@@ -315,12 +326,14 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	log.Println(string(body))
+
 	ctx := r.Context()
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	url := V1TasklistUrl + "/search"
-	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", url, bytes.NewBuffer(body))
+	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", TasklistHost+url, bytes.NewBuffer(body))
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -331,7 +344,13 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, string(resp)); err != nil {
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

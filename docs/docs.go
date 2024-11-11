@@ -1464,7 +1464,10 @@ const docTemplate = `{
                     }
                 },
                 "sort": {
-                    "$ref": "#/definitions/main.SortSearchTasklist"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.SortSearchTasklist"
+                    }
                 },
                 "state": {
                     "type": "string"

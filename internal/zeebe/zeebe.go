@@ -962,6 +962,12 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// delete model
+	if err := app.store.%s.Delete(ctx, model.ID); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
 	// TODO: add rollback if failed to cancel in zeebe
 	if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
 		app.internalServerError(w, r, err)
@@ -1041,12 +1047,14 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		processName,
 		processName,
 		processName,
+
 		// cancel
 		processName,
 		processName,
 		processName,
 		processName,
 		tableName,
+		processName,
 		processName,
 		processName,
 

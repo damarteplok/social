@@ -40,7 +40,7 @@ func (z *ZeebeClientRest) SendRequest(ctx context.Context, method, endpoint stri
 		return nil, fmt.Errorf("failed to get auth token: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, z.zeebeAddr+endpoint, body)
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

@@ -131,6 +131,12 @@ func (app *application) cancelProcess1hti3q2Handler(w http.ResponseWriter, r *ht
 		return
 	}
 
+	// delete model
+	if err := app.store.Process1hti3q2.Delete(ctx, model.ID); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
 	// TODO: add rollback if failed to cancel in zeebe
 	if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
 		app.internalServerError(w, r, err)

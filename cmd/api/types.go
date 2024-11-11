@@ -170,23 +170,23 @@ type SortSearchTasklist struct {
 }
 
 type SearchTaskListPayload struct {
-	State                string             `json:"state,omitempty"`
-	Assigned             bool               `json:"assgined,omitempty"`
-	Assignee             string             `json:"assignee,omitempty"`
-	Assignees            []string           `json:"assignees,omitempty"`
-	TaskDefinitionId     string             `json:"taskDefinitionId,omitempty"`
-	CandidateGroup       string             `json:"candidateGroup,omitempty"`
-	CandidateGroups      []string           `json:"candidateGroups,omitempty"`
-	CandidateUser        string             `json:"candidateUser,omitempty"`
-	CandidateUsers       []string           `json:"candidateUsers,omitempty"`
-	ProcessDefinitionKey string             `json:"processDefinitionKey,omitempty"`
-	ProcessInstanceKey   string             `json:"processInstanceKey,omitempty"`
-	PageSize             int32              `json:"pageSize,omitempty"`
-	Sort                 SortSearchTasklist `json:"sort,omitempty"`
-	SearchAfter          []string           `json:"searchAfter,omitempty"`
-	SearchAfterOrEqual   []string           `json:"searchAfterOrEqual,omitempty"`
-	SearchBefore         []string           `json:"searchBefore,omitempty"`
-	SearchBeforeOrEqual  []string           `json:"searchBeforeOrEqual,omitempty"`
+	State                string               `json:"state,omitempty"`
+	Assigned             bool                 `json:"assgined,omitempty"`
+	Assignee             string               `json:"assignee,omitempty"`
+	Assignees            []string             `json:"assignees,omitempty"`
+	TaskDefinitionId     string               `json:"taskDefinitionId,omitempty"`
+	CandidateGroup       string               `json:"candidateGroup,omitempty"`
+	CandidateGroups      []string             `json:"candidateGroups,omitempty"`
+	CandidateUser        string               `json:"candidateUser,omitempty"`
+	CandidateUsers       []string             `json:"candidateUsers,omitempty"`
+	ProcessDefinitionKey string               `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceKey   string               `json:"processInstanceKey,omitempty"`
+	PageSize             int32                `json:"pageSize,omitempty"`
+	Sort                 []SortSearchTasklist `json:"sort,omitempty"`
+	SearchAfter          []string             `json:"searchAfter,omitempty"`
+	SearchAfterOrEqual   []string             `json:"searchAfterOrEqual,omitempty"`
+	SearchBefore         []string             `json:"searchBefore,omitempty"`
+	SearchBeforeOrEqual  []string             `json:"searchBeforeOrEqual,omitempty"`
 }
 
 func (p *SearchTaskListPayload) IsValidState() error {
