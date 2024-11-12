@@ -714,11 +714,11 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`
-		%s interface {
-			Get(context.Context, int64) (*store.%s, error)
-			Set(context.Context, *store.%s) error
-			Delete(context.Context, int64)
-		}
+	%s interface {
+		Get(context.Context, int64) (*store.%s, error)
+		Set(context.Context, *store.%s) error
+		Delete(context.Context, int64)
+	}
 `,
 		userTaskName,
 		userTaskName,
@@ -726,9 +726,9 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 	)
 
 	generateCodeCacheInterface := fmt.Sprintf(`
-			%s: &%sStore{
-				rdb: rbd,
-			},
+		%s: &%sStore{
+			rdb: rbd,
+		},
 `,
 		userTaskName,
 		userTaskName,
@@ -1171,7 +1171,7 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.%s.GetByID(ctx, id)
+	model, err := app.cacheStorage.%s.Get(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
@@ -1225,7 +1225,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.%s.GetByID(ctx, id)
+	model, err := app.cacheStorage.%s.Get(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
@@ -1430,11 +1430,11 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`
-	%s interface {
-		Get(context.Context, int64) (*store.%s, error)
-		Set(context.Context, *store.%s) error
-		Delete(context.Context, int64)
-	}
+		%s interface {
+			Get(context.Context, int64) (*store.%s, error)
+			Set(context.Context, *store.%s) error
+			Delete(context.Context, int64)
+		}
 `,
 		processName,
 		processName,
@@ -1442,7 +1442,7 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 	)
 
 	generateCodeCacheInterface := fmt.Sprintf(`
-	%s: &%sStore{
+		%s: &%sStore{
 			rdb: rbd,
 		},
 `,
