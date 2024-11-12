@@ -116,14 +116,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/bpmn/pesen_ke_restorant": {
+        "/bpmn/kantor_ngetes_id": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create PesenKeRestorant",
+                "description": "Create KantorNgetesId",
                 "consumes": [
                     "application/json"
                 ],
@@ -131,25 +131,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn/PesenKeRestorant"
+                    "bpmn/KantorNgetesId"
                 ],
-                "summary": "Create PesenKeRestorant",
+                "summary": "Create KantorNgetesId",
                 "parameters": [
                     {
-                        "description": "PesenKeRestorant Payload",
+                        "description": "KantorNgetesId Payload",
                         "name": "payload",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.CreatePesenKeRestorantPayload"
+                            "$ref": "#/definitions/main.CreateKantorNgetesIdPayload"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "PesenKeRestorant Created",
+                        "description": "KantorNgetesId Created",
                         "schema": {
-                            "$ref": "#/definitions/main.DataStorePesenKeRestorantWrapper"
+                            "$ref": "#/definitions/main.DataStoreKantorNgetesIdWrapper"
                         }
                     },
                     "400": {
@@ -163,14 +163,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/bpmn/pesen_ke_restorant/{id}": {
+        "/bpmn/kantor_ngetes_id/{id}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "GetById PesenKeRestorant",
+                "description": "GetById KantorNgetesId",
                 "consumes": [
                     "application/json"
                 ],
@@ -178,9 +178,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn/PesenKeRestorant"
+                    "bpmn/KantorNgetesId"
                 ],
-                "summary": "GetById PesenKeRestorant",
+                "summary": "GetById KantorNgetesId",
                 "parameters": [
                     {
                         "type": "integer",
@@ -192,7 +192,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "PesenKeRestorant GetById",
+                        "description": "KantorNgetesId GetById",
                         "schema": {
                             "type": "string"
                         }
@@ -217,7 +217,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Cancel PesenKeRestorant",
+                "description": "Cancel KantorNgetesId",
                 "consumes": [
                     "application/json"
                 ],
@@ -225,9 +225,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn/PesenKeRestorant"
+                    "bpmn/KantorNgetesId"
                 ],
-                "summary": "Cancel PesenKeRestorant",
+                "summary": "Cancel KantorNgetesId",
                 "parameters": [
                     {
                         "type": "integer",
@@ -239,7 +239,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "PesenKeRestorant Canceled",
+                        "description": "KantorNgetesId Canceled",
                         "schema": {
                             "type": "string"
                         }
@@ -1097,7 +1097,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.CreatePesenKeRestorantPayload": {
+        "main.CreateKantorNgetesIdPayload": {
             "type": "object",
             "properties": {
                 "variables": {
@@ -1241,11 +1241,11 @@ const docTemplate = `{
                 }
             }
         },
-        "main.DataStorePesenKeRestorantWrapper": {
+        "main.DataStoreKantorNgetesIdWrapper": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/store.PesenKeRestorant"
+                    "$ref": "#/definitions/store.KantorNgetesId"
                 }
             }
         },
@@ -1599,7 +1599,7 @@ const docTemplate = `{
                 }
             }
         },
-        "store.PesenKeRestorant": {
+        "store.KantorNgetesId": {
             "type": "object",
             "properties": {
                 "created_at": {

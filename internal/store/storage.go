@@ -46,6 +46,34 @@ type Storage struct {
 		GetByName(context.Context, string) (*Role, error)
 	}
 	// GENERATED CODE INTERFACE
+
+	KantorNgetesId interface {
+		Create(context.Context, *KantorNgetesId) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*KantorNgetesId, error)
+	}
+
+
+		SetujuiSomething interface {
+			Create(context.Context, *SetujuiSomething) error
+			Delete(context.Context, int64) error
+			GetByID(context.Context, int64) (*SetujuiSomething, error)
+		}
+
+
+		ReviewSomething interface {
+			Create(context.Context, *ReviewSomething) error
+			Delete(context.Context, int64) error
+			GetByID(context.Context, int64) (*ReviewSomething, error)
+		}
+
+
+		BikinSomething interface {
+			Create(context.Context, *BikinSomething) error
+			Delete(context.Context, int64) error
+			GetByID(context.Context, int64) (*BikinSomething, error)
+		}
+
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -56,6 +84,18 @@ func NewStorage(db *sql.DB) Storage {
 		Followers: &FollowerStore{db},
 		Roles:     &RoleStore{db},
 		// GENERATED CODE CONSTRUCTOR
+
+		KantorNgetesId:   &KantorNgetesIdStore{db},
+
+
+			SetujuiSomething:   &SetujuiSomethingStore{db},
+
+
+			ReviewSomething:   &ReviewSomethingStore{db},
+
+
+			BikinSomething:   &BikinSomethingStore{db},
+
 	}
 }
 
