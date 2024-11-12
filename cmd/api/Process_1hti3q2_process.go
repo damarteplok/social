@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +26,7 @@ type DataStoreProcess1hti3q2Wrapper struct {
 //
 //	@Summary		Create Process1hti3q2
 //	@Description	Create Process1hti3q2
-//	@Tags			bpmn
+//	@Tags			bpmn/Process1hti3q2
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		CreateProcess1hti3q2Payload		true	"Process1hti3q2 Payload"
@@ -99,7 +98,7 @@ func (app *application) createProcess1hti3q2Handler(w http.ResponseWriter, r *ht
 //
 //	@Summary		Cancel Process1hti3q2
 //	@Description	Cancel Process1hti3q2
-//	@Tags			bpmn
+//	@Tags			bpmn/Process1hti3q2
 //	@Accept			json
 //	@produce		json
 //	@Param			id	path		int		true	"id"
@@ -122,12 +121,7 @@ func (app *application) cancelProcess1hti3q2Handler(w http.ResponseWriter, r *ht
 
 	model, err := app.store.Process1hti3q2.GetByID(ctx, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundResponse(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
+		app.handleRequestError(w, r, err)
 		return
 	}
 
@@ -153,7 +147,7 @@ func (app *application) cancelProcess1hti3q2Handler(w http.ResponseWriter, r *ht
 //
 //	@Summary		GetById Process1hti3q2
 //	@Description	GetById Process1hti3q2
-//	@Tags			bpmn
+//	@Tags			bpmn/Process1hti3q2
 //	@Accept			json
 //	@produce		json
 //	@Param			id	path		int		true	"ID from table"
@@ -177,12 +171,7 @@ func (app *application) getByIdProcess1hti3q2Handler(w http.ResponseWriter, r *h
 
 	model, err := app.store.Process1hti3q2.GetByID(ctx, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundResponse(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
+		app.handleRequestError(w, r, err)
 		return
 	}
 

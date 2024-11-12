@@ -89,6 +89,13 @@ func main() {
 			zeebeClientSecret:  env.Envs.ZeebeClientSecret,
 			zeebeAuthServerUrl: env.Envs.ZeebeAuthServerUrl,
 		},
+		camundaRest: camundaRestConfig{
+			zeebeRestAddress:       env.Envs.ZeebeRestAddress,
+			zeebeGrpcAddress:       env.Envs.ZeebeGrpcAddress,
+			camundaTasklistBaseUrl: env.Envs.CamundaTasklistBaseUrl,
+			camundaOperateBaseUrl:  env.Envs.CamundaOperateBaseUrl,
+			camundaOptimizeBaseUrl: env.Envs.CamundaOperateBaseUrl,
+		},
 		rateLimiter: ratelimiter.Config{
 			RequestPerTimeFrame: env.Envs.RequestPerTimeFrame,
 			TimeFrame:           env.Envs.RateLimiterTimeFrame,

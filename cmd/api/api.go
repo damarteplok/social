@@ -130,22 +130,28 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/bpmn", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
-			// r.Route("/kantor_ngetes_id", func(r chi.Router) {
-			// 	r.Post("/", app.createKantorNgetesIdHandler)
-			// 	r.Route("/{id}", func(r chi.Router) {
-			// 		r.Delete("/", app.cancelKantorNgetesIdHandler)
-			// 	})
-			// })
-			// r.Route("/pesen_ke_restorant", func(r chi.Router) {
-			// 	r.Post("/", app.createPesenKeRestorantHandler)
-			// 	r.Route("/{id}", func(r chi.Router) {
-			// 		r.Delete("/", app.cancelPesenKeRestorantHandler)
-			// 	})
-			// })
+			// GENERATE ROUTES API
+
+			r.Route("/pesen_ke_restorant", func(r chi.Router) {
+				r.Post("/", app.createPesenKeRestorantHandler)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", app.getByIdPesenKeRestorantHandler)
+					r.Delete("/", app.cancelPesenKeRestorantHandler)
+				})
+			})	
+
+
+			r.Route("/kantor_ngetes_id", func(r chi.Router) {
+				r.Post("/", app.createKantorNgetesIdHandler)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", app.getByIdKantorNgetesIdHandler)
+					r.Delete("/", app.cancelKantorNgetesIdHandler)
+				})
+			})	
+
+
 			r.Route("/Process_1hti3q2", func(r chi.Router) {
 				r.Post("/", app.createProcess1hti3q2Handler)
-				// get tasklist
-
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", app.getByIdProcess1hti3q2Handler)
 					r.Delete("/", app.cancelProcess1hti3q2Handler)

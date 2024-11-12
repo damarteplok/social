@@ -11,10 +11,10 @@ import (
 )
 
 type CreatePesenKeRestorantPayload struct {
-	Variables *map[string]string `json:"variables,omitempty"`
+	Variables   		 *map[string]string  `json:"variables,omitempty"`
 }
 type UpdatePesenKeRestorantPayload struct {
-	Variables *map[string]string `json:"variables,omitempty"`
+	Variables            *map[string]string  `json:"variables,omitempty"`
 }
 type DataStorePesenKeRestorantWrapper struct {
 	Data store.PesenKeRestorant `json:"data"`
@@ -26,7 +26,7 @@ type DataStorePesenKeRestorantWrapper struct {
 //
 //	@Summary		Create PesenKeRestorant
 //	@Description	Create PesenKeRestorant
-//	@Tags			bpmn
+//	@Tags			bpmn/PesenKeRestorant
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		CreatePesenKeRestorantPayload		true	"PesenKeRestorant Payload"
@@ -50,7 +50,7 @@ func (app *application) createPesenKeRestorantHandler(w http.ResponseWriter, r *
 
 	// TODO: Change in this code
 	// TODO: ADD to storage interface for use create store
-
+	
 	ctx := r.Context()
 	variables := make(map[string]interface{})
 	variables["user"] = user
@@ -93,22 +93,23 @@ func (app *application) createPesenKeRestorantHandler(w http.ResponseWriter, r *
 	}
 }
 
+
 // Cancel PesenKeRestorant godoc
 //
 //	@Summary		Cancel PesenKeRestorant
 //	@Description	Cancel PesenKeRestorant
-//	@Tags			bpmn
+//	@Tags			bpmn/PesenKeRestorant
 //	@Accept			json
 //	@produce		json
-//	@Param			processInstanceKey	path		int		true	"ProcessInstanceKey"
-//	@Success		200					{string}	string	"PesenKeRestorant Canceled"
-//	@Failure		400					{object}	error
-//	@Failure		500					{object}	error
+//	@Param			id	path		int		true	"ProcessInstanceKey"
+//	@Success		200	{string}	string	"PesenKeRestorant Canceled"
+//	@Failure		400	{object}	error
+//	@Failure		500	{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/bpmn/pesen_ke_restorant/{processInstanceKey}  [delete]
+//	@Router			/bpmn/pesen_ke_restorant/{id}  [delete]
 func (app *application) cancelPesenKeRestorantHandler(w http.ResponseWriter, r *http.Request) {
-	processInstanceKey, err := strconv.ParseInt(chi.URLParam(r, "processinstanceKey"), 10, 64)
-	if err != nil || processInstanceKey < 1 {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -118,12 +119,64 @@ func (app *application) cancelPesenKeRestorantHandler(w http.ResponseWriter, r *
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	if err := app.zeebeClient.CancelWorkflow(ctx, processInstanceKey); err != nil {
+	model, err := app.store.PesenKeRestorant.GetByID(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	// delete model
+	if err := app.store.PesenKeRestorant.Delete(ctx, model.ID); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// TODO: add rollback if failed to cancel in zeebe
+	if err := app.zeebeClient.CancelWorkflow(ctx, model.ProcessInstanceKey); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, "success"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+
+// GetById PesenKeRestorant godoc
+//
+//	@Summary		GetById PesenKeRestorant
+//	@Description	GetById PesenKeRestorant
+//	@Tags			bpmn/PesenKeRestorant
+//	@Accept			json
+//	@produce		json
+//	@Param			id	path		int		true	"ID from table"
+//	@Success		200	{string}	string	"PesenKeRestorant GetById"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/pesen_ke_restorant/{id}  [get]
+func (app *application) getByIdPesenKeRestorantHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.store.PesenKeRestorant.GetByID(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

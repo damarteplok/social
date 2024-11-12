@@ -44,14 +44,22 @@ type Storage struct {
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
-	KantorNgetesId interface {
-		Create(context.Context, *KantorNgetesId) error
-		Delete(context.Context, int64) error
-	}
+	// GENERATED CODE INTERFACE
+
 	PesenKeRestorant interface {
 		Create(context.Context, *PesenKeRestorant) error
 		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*PesenKeRestorant, error)
 	}
+
+
+	KantorNgetesId interface {
+		Create(context.Context, *KantorNgetesId) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*KantorNgetesId, error)
+	}
+
+
 	Process1hti3q2 interface {
 		Create(context.Context, *Process1hti3q2) error
 		Delete(context.Context, int64) error
@@ -61,14 +69,20 @@ type Storage struct {
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:            &PostStore{db},
-		Users:            &UserStore{db},
-		Comments:         &CommentStore{db},
-		Followers:        &FollowerStore{db},
-		Roles:            &RoleStore{db},
+		Posts:          &PostStore{db},
+		Users:          &UserStore{db},
+		Comments:       &CommentStore{db},
+		Followers:      &FollowerStore{db},
+		Roles:          &RoleStore{db},
+		Process1hti3q2: &Process1hti3q2Store{db},
+		// GENERATED CODE CONSTRUCTOR
+
+		PesenKeRestorant:   &PesenKeRestorantStore{db},
+
+
 		KantorNgetesId:   &KantorNgetesIdStore{db},
-		PesenKeRestorant: &PesenKeRestorantStore{db},
-		Process1hti3q2:   &Process1hti3q2Store{db},
+
+
 	}
 }
 

@@ -40,6 +40,7 @@ type config struct {
 	auth        authConfig
 	redisCfg    redisConfig
 	rateLimiter ratelimiter.Config
+	camundaRest camundaRestConfig
 }
 
 type redisConfig struct {
@@ -78,6 +79,14 @@ type camundaConfig struct {
 	zeebeClientId      string
 	zeebeClientSecret  string
 	zeebeAuthServerUrl string
+}
+
+type camundaRestConfig struct {
+	zeebeRestAddress       string
+	zeebeGrpcAddress       string
+	camundaTasklistBaseUrl string
+	camundaOperateBaseUrl  string
+	camundaOptimizeBaseUrl string
 }
 
 type sendGridConfig struct {

@@ -21,8 +21,6 @@ const (
 	StateFailed        = "FAILED"
 	ProcessInstanceUrl = "/v2/process-instances"
 	V1TasklistUrl      = "/v1/tasks"
-	ZeebeHost          = "http://localhost:8088"
-	TasklistHost       = "http://localhost:8082"
 )
 
 // Deploy godoc
@@ -210,7 +208,12 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", ZeebeHost+ProcessInstanceUrl, bytes.NewBuffer(body))
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		app.config.camundaRest.zeebeRestAddress+ProcessInstanceUrl,
+		bytes.NewBuffer(body),
+	)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -257,8 +260,13 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	url := ProcessInstanceUrl + "/" + strconv.Itoa(int(processInstanceKey)) + "/cancellation"
-	_, err = app.zeebeClientRest.SendRequest(ctx, "POST", ZeebeHost+url, bytes.NewBufferString("{}"))
+	url := fmt.Sprintf("%s/%d/cancellation", ProcessInstanceUrl, processInstanceKey)
+	_, err = app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		app.config.camundaRest.zeebeRestAddress+url,
+		bytes.NewBufferString("{}"),
+	)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -300,6 +308,46 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	app.setDefaultSort(&payload)
+	app.setDefaultState(&payload)
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	log.Println(string(body))
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaTasklistBaseUrl, V1TasklistUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) setDefaultSort(payload *SearchTaskListPayload) {
 	if len(payload.Sort) > 1 {
 		for i := range payload.Sort {
 			if payload.Sort[i].Field == "" {
@@ -315,43 +363,19 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 			Order: "DESC",
 		})
 	}
+}
 
+func (app *application) setDefaultState(payload *SearchTaskListPayload) {
 	if payload.State == "" {
 		payload.State = "CREATED"
 	}
+}
 
-	body, err := json.Marshal(payload)
-	if err != nil {
+func (app *application) handleRequestError(w http.ResponseWriter, r *http.Request, err error) {
+	switch err {
+	case store.ErrNotFound:
+		app.notFoundResponse(w, r, err)
+	default:
 		app.internalServerError(w, r, err)
-		return
-	}
-
-	log.Println(string(body))
-
-	ctx := r.Context()
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
-	url := V1TasklistUrl + "/search"
-	resp, err := app.zeebeClientRest.SendRequest(ctx, "POST", TasklistHost+url, bytes.NewBuffer(body))
-	if err != nil {
-		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
-		return
-	}
-
-	var jsonData interface{}
-	if err := json.Unmarshal(resp, &jsonData); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
-	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
-		app.internalServerError(w, r, err)
-		return
 	}
 }

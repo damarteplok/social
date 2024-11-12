@@ -18,15 +18,15 @@ const (
 )
 
 type SetujuiSomething struct {
-    ID int64 `json:"id"`
-	Name string  `json:"name"`
-	FormId string  `json:"form_id"`
-	Properties []string  `json:"properties"`
-	CreatedBy int64 `json:"created_by"`
-	UpdatedBy *int64 `json:"updated_by"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	DeletedAt *string `json:"deleted_at"`
+    ID         int64    `json:"id"`
+	Name       string   `json:"name"`
+	FormId     string   `json:"form_id"`
+	Properties []string `json:"properties"`
+	CreatedBy  int64    `json:"created_by"`
+	UpdatedBy  *int64   `json:"updated_by"`
+	CreatedAt  string   `json:"created_at"`
+	UpdatedAt  string   `json:"updated_at"`
+	DeletedAt  *string  `json:"deleted_at"`
 }
 
 type SetujuiSomethingStore struct {
@@ -112,7 +112,8 @@ func (s *SetujuiSomethingStore) create(ctx context.Context, tx *sql.Tx, model *S
 
 func (s *SetujuiSomethingStore) GetByID(ctx context.Context, id int64) (*SetujuiSomething, error) {
 	query := `
-		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, 
+		updated_by, created_at, updated_at
 		FROM setujuisomething
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -189,7 +190,7 @@ func (s *SetujuiSomethingStore) update(ctx context.Context, tx *sql.Tx, model *S
 		UPDATE setujuisomething
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -204,7 +205,15 @@ func (s *SetujuiSomethingStore) update(ctx context.Context, tx *sql.Tx, model *S
 		propertiesJSON,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.Name, 
+		&model.FormId, 
+		propertiesData, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

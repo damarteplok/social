@@ -1,5 +1,4 @@
 package store
-
 import (
 	"context"
 	"database/sql"
@@ -8,17 +7,18 @@ import (
 )
 
 const (
-	DecideWhatsForDinnerID             = "decide_dinner"
-	DecideWhatsForDinnerName           = "decide whats for dinner"
-	DecideWhatsForDinnerFormID         = "form_decide_what_for_dinner"
-	DecideWhatsForDinnerAssignee       = ""
+	DecideWhatsForDinnerID = "decide_dinner"
+	DecideWhatsForDinnerName = "decide whats for dinner"
+	DecideWhatsForDinnerFormID = "form_decide_what_for_dinner"
+	DecideWhatsForDinnerAssignee = ""
 	DecideWhatsForDinnerCandidateGroup = ""
-	DecideWhatsForDinnerCandidateUser  = ""
-	DecideWhatsForDinnerSchedule       = ``
+	DecideWhatsForDinnerCandidateUser = ""
+	DecideWhatsForDinnerSchedule = ``
+
 )
 
 type DecideWhatsForDinner struct {
-	ID         int64    `json:"id"`
+    ID         int64    `json:"id"`
 	Name       string   `json:"name"`
 	FormId     string   `json:"form_id"`
 	Properties []string `json:"properties"`
@@ -48,7 +48,7 @@ func (s *DecideWhatsForDinnerStore) Delete(ctx context.Context, id int64) error 
 			return err
 		}
 		return nil
-	})
+	})	
 }
 
 func (s *DecideWhatsForDinnerStore) Update(ctx context.Context, model *DecideWhatsForDinner) error {
@@ -59,7 +59,7 @@ func (s *DecideWhatsForDinnerStore) Update(ctx context.Context, model *DecideWha
 		return nil
 	})
 }
-
+	
 func (s *DecideWhatsForDinnerStore) create(ctx context.Context, tx *sql.Tx, model *DecideWhatsForDinner) error {
 	if model.Properties == nil {
 		model.Properties = []string{}
@@ -112,7 +112,8 @@ func (s *DecideWhatsForDinnerStore) create(ctx context.Context, tx *sql.Tx, mode
 
 func (s *DecideWhatsForDinnerStore) GetByID(ctx context.Context, id int64) (*DecideWhatsForDinner, error) {
 	query := `
-		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, 
+		updated_by, created_at, updated_at
 		FROM decidewhatsfordinner
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -140,7 +141,7 @@ func (s *DecideWhatsForDinnerStore) GetByID(ctx context.Context, id int64) (*Dec
 			return nil, err
 		}
 	}
-
+		
 	if len(propertiesData) > 0 {
 		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
 			return nil, err
@@ -176,6 +177,7 @@ func (s *DecideWhatsForDinnerStore) delete(ctx context.Context, tx *sql.Tx, id i
 }
 
 func (s *DecideWhatsForDinnerStore) update(ctx context.Context, tx *sql.Tx, model *DecideWhatsForDinner) error {
+
 	if model.Properties == nil {
 		model.Properties = []string{}
 	}
@@ -188,7 +190,7 @@ func (s *DecideWhatsForDinnerStore) update(ctx context.Context, tx *sql.Tx, mode
 		UPDATE decidewhatsfordinner
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -203,7 +205,15 @@ func (s *DecideWhatsForDinnerStore) update(ctx context.Context, tx *sql.Tx, mode
 		propertiesJSON,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.Name, 
+		&model.FormId, 
+		propertiesData, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -215,3 +225,4 @@ func (s *DecideWhatsForDinnerStore) update(ctx context.Context, tx *sql.Tx, mode
 
 	return nil
 }
+

@@ -1,5 +1,4 @@
 package store
-
 import (
 	"context"
 	"database/sql"
@@ -8,17 +7,18 @@ import (
 )
 
 const (
-	BikinSomethingID             = "bikin_something"
-	BikinSomethingName           = "bikin something"
-	BikinSomethingFormID         = "form_bikin_something"
-	BikinSomethingAssignee       = ""
+	BikinSomethingID = "bikin_something"
+	BikinSomethingName = "bikin something"
+	BikinSomethingFormID = "form_bikin_something"
+	BikinSomethingAssignee = ""
 	BikinSomethingCandidateGroup = ""
-	BikinSomethingCandidateUser  = ""
-	BikinSomethingSchedule       = ``
+	BikinSomethingCandidateUser = ""
+	BikinSomethingSchedule = ``
+
 )
 
 type BikinSomething struct {
-	ID         int64    `json:"id"`
+    ID         int64    `json:"id"`
 	Name       string   `json:"name"`
 	FormId     string   `json:"form_id"`
 	Properties []string `json:"properties"`
@@ -48,7 +48,7 @@ func (s *BikinSomethingStore) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 		return nil
-	})
+	})	
 }
 
 func (s *BikinSomethingStore) Update(ctx context.Context, model *BikinSomething) error {
@@ -59,7 +59,7 @@ func (s *BikinSomethingStore) Update(ctx context.Context, model *BikinSomething)
 		return nil
 	})
 }
-
+	
 func (s *BikinSomethingStore) create(ctx context.Context, tx *sql.Tx, model *BikinSomething) error {
 	if model.Properties == nil {
 		model.Properties = []string{}
@@ -112,7 +112,8 @@ func (s *BikinSomethingStore) create(ctx context.Context, tx *sql.Tx, model *Bik
 
 func (s *BikinSomethingStore) GetByID(ctx context.Context, id int64) (*BikinSomething, error) {
 	query := `
-		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, 
+		updated_by, created_at, updated_at
 		FROM bikinsomething
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -140,7 +141,7 @@ func (s *BikinSomethingStore) GetByID(ctx context.Context, id int64) (*BikinSome
 			return nil, err
 		}
 	}
-
+		
 	if len(propertiesData) > 0 {
 		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
 			return nil, err
@@ -176,6 +177,7 @@ func (s *BikinSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64) 
 }
 
 func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *BikinSomething) error {
+
 	if model.Properties == nil {
 		model.Properties = []string{}
 	}
@@ -188,7 +190,7 @@ func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Bik
 		UPDATE bikinsomething
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -203,7 +205,15 @@ func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Bik
 		propertiesJSON,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.Name, 
+		&model.FormId, 
+		propertiesData, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -215,3 +225,4 @@ func (s *BikinSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Bik
 
 	return nil
 }
+

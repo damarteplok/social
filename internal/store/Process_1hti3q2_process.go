@@ -19,6 +19,8 @@ type Process1hti3q2 struct {
 	Version              int32   `json:"version"`
 	ResourceName         string  `json:"resource_name"`
 	ProcessInstanceKey   int64   `json:"process_instance_key"`
+	TaskDefinitionId     *string `json:"task_definition_id"`
+	TaskState            *string `json:"task_state"`
 	CreatedBy            int64   `json:"created_by"`
 	UpdatedBy            *int64  `json:"updated_by"`
 	CreatedAt            string  `json:"created_at"`
@@ -164,7 +166,7 @@ func (s *Process1hti3q2Store) update(ctx context.Context, tx *sql.Tx, model *Pro
 		UPDATE Process_1hti3q2
 		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_by = $5, updated_at = NOW()
 		WHERE id = $4 AND deleted_at IS NULL
-		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at updated_at;
+		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at, updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)

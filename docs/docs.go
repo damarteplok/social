@@ -131,7 +131,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/Process1hti3q2"
                 ],
                 "summary": "Create Process1hti3q2",
                 "parameters": [
@@ -178,7 +178,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/Process1hti3q2"
                 ],
                 "summary": "GetById Process1hti3q2",
                 "parameters": [
@@ -225,7 +225,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/Process1hti3q2"
                 ],
                 "summary": "Cancel Process1hti3q2",
                 "parameters": [
@@ -270,7 +270,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/KantorNgetesId"
                 ],
                 "summary": "Create KantorNgetesId",
                 "parameters": [
@@ -302,7 +302,54 @@ const docTemplate = `{
                 }
             }
         },
-        "/bpmn/kantor_ngetes_id/{processInstanceKey}": {
+        "/bpmn/kantor_ngetes_id/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById KantorNgetesId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/KantorNgetesId"
+                ],
+                "summary": "GetById KantorNgetesId",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KantorNgetesId GetById",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -317,14 +364,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/KantorNgetesId"
                 ],
                 "summary": "Cancel KantorNgetesId",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "ProcessInstanceKey",
-                        "name": "processInstanceKey",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -362,7 +409,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/PesenKeRestorant"
                 ],
                 "summary": "Create PesenKeRestorant",
                 "parameters": [
@@ -394,7 +441,54 @@ const docTemplate = `{
                 }
             }
         },
-        "/bpmn/pesen_ke_restorant/{processInstanceKey}": {
+        "/bpmn/pesen_ke_restorant/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById PesenKeRestorant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PesenKeRestorant"
+                ],
+                "summary": "GetById PesenKeRestorant",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PesenKeRestorant GetById",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -409,14 +503,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "bpmn"
+                    "bpmn/PesenKeRestorant"
                 ],
                 "summary": "Cancel PesenKeRestorant",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "ProcessInstanceKey",
-                        "name": "processInstanceKey",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1585,6 +1679,12 @@ const docTemplate = `{
                 "resource_name": {
                     "type": "string"
                 },
+                "task_definition_id": {
+                    "type": "string"
+                },
+                "task_state": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -1618,6 +1718,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "resource_name": {
+                    "type": "string"
+                },
+                "task_definition_id": {
+                    "type": "string"
+                },
+                "task_state": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -1694,6 +1800,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "resource_name": {
+                    "type": "string"
+                },
+                "task_definition_id": {
+                    "type": "string"
+                },
+                "task_state": {
                     "type": "string"
                 },
                 "updated_at": {

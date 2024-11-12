@@ -1,5 +1,4 @@
 package store
-
 import (
 	"context"
 	"database/sql"
@@ -7,18 +6,20 @@ import (
 )
 
 const (
-	PesenKeRestorantVersion              = 3
+	PesenKeRestorantVersion = 3
 	PesenKeRestorantProcessDefinitionKey = 2251799813928651
-	PesenKeRestorantResourceName         = "decide-dinner.bpmn"
+	PesenKeRestorantResourceName = "decide-dinner.bpmn"
 )
 
 // TODO: UPDATE THIS STRUCT AND CODE BELOW
 type PesenKeRestorant struct {
-	ID                   int64   `json:"id"`
+    ID                   int64   `json:"id"`
 	ProcessDefinitionKey int64   `json:"process_definition_key"`
 	Version              int32   `json:"version"`
 	ResourceName         string  `json:"resource_name"`
 	ProcessInstanceKey   int64   `json:"process_instance_key"`
+	TaskDefinitionId     *string `json:"task_definition_id"`
+	TaskState            *string `json:"task_state"`
 	CreatedBy            int64   `json:"created_by"`
 	UpdatedBy            *int64  `json:"updated_by"`
 	CreatedAt            string  `json:"created_at"`
@@ -45,7 +46,7 @@ func (s *PesenKeRestorantStore) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 		return nil
-	})
+	})	
 }
 
 func (s *PesenKeRestorantStore) Update(ctx context.Context, model *PesenKeRestorant) error {
@@ -56,15 +57,17 @@ func (s *PesenKeRestorantStore) Update(ctx context.Context, model *PesenKeRestor
 		return nil
 	})
 }
-
+	
 func (s *PesenKeRestorantStore) create(ctx context.Context, tx *sql.Tx, model *PesenKeRestorant) error {
-	// model.Version = 3
-	// model.ProcessDefinitionKey = 2251799813928651
+	//model.Version = 3
+	//model.ProcessDefinitionKey = 2251799813928651
 	model.ResourceName = "decide-dinner.bpmn"
 
 	query := `
-		INSERT INTO pesen_ke_restorant (process_definition_key, version, resource_name, process_instance_key, created_by)
-		VALUES (
+		INSERT INTO pesen_ke_restorant (
+			process_definition_key, version, 
+			resource_name, process_instance_key, created_by
+		) VALUES (
 			$1, 
 			$2, 
 			$3,
@@ -105,7 +108,9 @@ func (s *PesenKeRestorantStore) create(ctx context.Context, tx *sql.Tx, model *P
 
 func (s *PesenKeRestorantStore) GetByID(ctx context.Context, id int64) (*PesenKeRestorant, error) {
 	query := `
-		SELECT id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at, updated_at
+		SELECT id, process_definition_key, version, 
+			resource_name, process_instance_key, 
+			created_by, updated_by, created_at, updated_at
 		FROM pesen_ke_restorant
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -162,9 +167,20 @@ func (s *PesenKeRestorantStore) delete(ctx context.Context, tx *sql.Tx, id int64
 func (s *PesenKeRestorantStore) update(ctx context.Context, tx *sql.Tx, model *PesenKeRestorant) error {
 	query := `
 		UPDATE pesen_ke_restorant
-		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_by = $5, updated_at = NOW()
+		SET process_definition_key = $1, 
+			version = $2, 
+			resource_name = $3, 
+			process_instance_key = $4, 
+			updated_by = $5, 
+			updated_at = NOW()
 		WHERE id = $4 AND deleted_at IS NULL
-		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at updated_at;
+		RETURNING id, process_definition_key, 
+			version, 
+			resource_name, 
+			process_instance_key, 
+			created_by, 
+			updated_by, 
+			created_at updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -179,14 +195,14 @@ func (s *PesenKeRestorantStore) update(ctx context.Context, tx *sql.Tx, model *P
 		model.ProcessInstanceKey,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID,
-		&model.ProcessDefinitionKey,
-		&model.Version,
-		&model.ResourceName,
-		&model.ProcessInstanceKey,
-		&model.CreatedBy,
-		&model.UpdatedBy,
-		&model.CreatedAt,
+	).Scan(&model.ID, 
+		&model.ProcessDefinitionKey, 
+		&model.Version, 
+		&model.ResourceName, 
+		&model.ProcessInstanceKey, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
 		&model.UpdatedAt,
 	)
 	if err != nil {
@@ -200,3 +216,4 @@ func (s *PesenKeRestorantStore) update(ctx context.Context, tx *sql.Tx, model *P
 
 	return nil
 }
+

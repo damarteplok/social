@@ -1,6 +1,7 @@
 package zeebe
 
 import (
+	"bufio"
 	"context"
 	"embed"
 	"encoding/xml"
@@ -294,15 +295,15 @@ const (
 )
 
 type %s struct {
-    ID int64 `+"`json:\"id\"`"+`
-	Name string  `+"`json:\"name\"`"+`
-	FormId string  `+"`json:\"form_id\"`"+`
-	Properties []string  `+"`json:\"properties\"`"+`
-	CreatedBy int64 `+"`json:\"created_by\"`"+`
-	UpdatedBy *int64 `+"`json:\"updated_by\"`"+`
-	CreatedAt string `+"`json:\"created_at\"`"+`
-	UpdatedAt string `+"`json:\"updated_at\"`"+`
-	DeletedAt *string `+"`json:\"deleted_at\"`"+`
+    ID         int64    `+"`json:\"id\"`"+`
+	Name       string   `+"`json:\"name\"`"+`
+	FormId     string   `+"`json:\"form_id\"`"+`
+	Properties []string `+"`json:\"properties\"`"+`
+	CreatedBy  int64    `+"`json:\"created_by\"`"+`
+	UpdatedBy  *int64   `+"`json:\"updated_by\"`"+`
+	CreatedAt  string   `+"`json:\"created_at\"`"+`
+	UpdatedAt  string   `+"`json:\"updated_at\"`"+`
+	DeletedAt  *string  `+"`json:\"deleted_at\"`"+`
 }
 
 type %sStore struct {
@@ -388,7 +389,8 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
-		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, 
+		updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
 	%s
@@ -465,7 +467,7 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		UPDATE %s
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -480,7 +482,15 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		propertiesJSON,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.Name, 
+		&model.FormId, 
+		propertiesData, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -554,6 +564,13 @@ func generateCrudProcess(processName, resourceName, tableName string, version in
 	filePathHandler := fmt.Sprintf("./cmd/api/%s_process.go", tableName)
 	filePathStore := fmt.Sprintf("./internal/store/%s_process.go", tableName)
 	filePathScripts := fmt.Sprintf("./scripts/%s_process.sql", tableName)
+	filePathEditStorage := "./internal/store/storage.go"
+	filePathEditRoutes := "./cmd/api/api.go"
+
+	moduleName, errModule := getModuleName()
+	if errModule != nil {
+		return errModule
+	}
 
 	scriptCode := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	id BIGSERIAL PRIMARY KEY,
@@ -561,11 +578,14 @@ func generateCrudProcess(processName, resourceName, tableName string, version in
 	version INT NOT NULL,
 	resource_name VARCHAR(256) NOT NULL,
 	process_instance_key BIGINT,
+	task_definition_id VARCHAR(256),
+	task_state VARCHAR(20) NOT NULL DEFAULT 'CREATED', 
 	created_by BIGINT NOT NULL,
 	updated_by BIGINT,
 	created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	deleted_at TIMESTAMP(0) WITH TIME ZONE
+	deleted_at TIMESTAMP(0) WITH TIME ZONE,
+	CONSTRAINT task_state_check CHECK (task_state IN ('CREATED', 'COMPLETED', 'CANCELED', 'FAILED'))
 )
 
 DROP TABLE IF EXISTS %s;
@@ -591,16 +611,18 @@ const (
 
 // TODO: UPDATE THIS STRUCT AND CODE BELOW
 type %s struct {
-    ID int64 `+"`json:\"id\"`"+`
-	ProcessDefinitionKey int64  `+"`json:\"process_definition_key\"`"+`
-	Version int32 `+"`json:\"version\"`"+`
-	ResourceName string `+"`json:\"resource_name\"`"+`
-	ProcessInstanceKey int64 `+"`json:\"process_instance_key\"`"+`
-	CreatedBy int64 `+"`json:\"created_by\"`"+`
-	UpdatedBy *int64 `+"`json:\"updated_by\"`"+`
-	CreatedAt string `+"`json:\"created_at\"`"+`
-	UpdatedAt string `+"`json:\"updated_at\"`"+`
-	DeletedAt *string `+"`json:\"deleted_at\"`"+`
+    ID                   int64   `+"`json:\"id\"`"+`
+	ProcessDefinitionKey int64   `+"`json:\"process_definition_key\"`"+`
+	Version              int32   `+"`json:\"version\"`"+`
+	ResourceName         string  `+"`json:\"resource_name\"`"+`
+	ProcessInstanceKey   int64   `+"`json:\"process_instance_key\"`"+`
+	TaskDefinitionId     *string `+"`json:\"task_definition_id\"`"+`
+	TaskState            *string `+"`json:\"task_state\"`"+`
+	CreatedBy            int64   `+"`json:\"created_by\"`"+`
+	UpdatedBy            *int64  `+"`json:\"updated_by\"`"+`
+	CreatedAt            string  `+"`json:\"created_at\"`"+`
+	UpdatedAt            string  `+"`json:\"updated_at\"`"+`
+	DeletedAt            *string `+"`json:\"deleted_at\"`"+`
 }
 
 type %sStore struct {
@@ -640,8 +662,10 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 	model.ResourceName = "%s"
 
 	query := %s
-		INSERT INTO %s (process_definition_key, version, resource_name, process_instance_key, created_by)
-		VALUES (
+		INSERT INTO %s (
+			process_definition_key, version, 
+			resource_name, process_instance_key, created_by
+		) VALUES (
 			$1, 
 			$2, 
 			$3,
@@ -682,7 +706,9 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
-		SELECT id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at, updated_at
+		SELECT id, process_definition_key, version, 
+			resource_name, process_instance_key, 
+			created_by, updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
 	%s
@@ -739,9 +765,20 @@ func (s *%sStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
 func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	query := %s
 		UPDATE %s
-		SET process_definition_key = $1, version = $2, resource_name = $3, process_instance_key = $4, updated_by = $5, updated_at = NOW()
+		SET process_definition_key = $1, 
+			version = $2, 
+			resource_name = $3, 
+			process_instance_key = $4, 
+			updated_by = $5, 
+			updated_at = NOW()
 		WHERE id = $4 AND deleted_at IS NULL
-		RETURNING id, process_definition_key, version, resource_name, process_instance_key, created_by, updated_by, created_at updated_at;
+		RETURNING id, process_definition_key, 
+			version, 
+			resource_name, 
+			process_instance_key, 
+			created_by, 
+			updated_by, 
+			created_at updated_at;
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -828,12 +865,11 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/damarteplok/social/internal/store"
+	"%s/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -853,7 +889,7 @@ type DataStore%sWrapper struct {
 //
 //	@Summary		Create %s
 //	@Description	Create %s
-//	@Tags			bpmn
+//	@Tags			bpmn/%s
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		Create%sPayload		true	"%s Payload"
@@ -925,7 +961,7 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 //
 //	@Summary		Cancel %s
 //	@Description	Cancel %s
-//	@Tags			bpmn
+//	@Tags			bpmn/%s
 //	@Accept			json
 //	@produce		json
 //	@Param			id	path		int		true	"ProcessInstanceKey"
@@ -946,19 +982,9 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	ctx := r.Context()
-
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
 	model, err := app.store.%s.GetByID(ctx, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundResponse(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
+		app.handleRequestError(w, r, err)
 		return
 	}
 
@@ -985,7 +1011,7 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 //
 //	@Summary		GetById %s
 //	@Description	GetById %s
-//	@Tags			bpmn
+//	@Tags			bpmn/%s
 //	@Accept			json
 //	@produce		json
 //	@Param			id	path		int		true	"ID from table"
@@ -1009,12 +1035,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 
 	model, err := app.store.%s.GetByID(ctx, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			app.notFoundResponse(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
+		app.handleRequestError(w, r, err)
 		return
 	}
 
@@ -1024,6 +1045,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 `,
+		moduleName,
 		processName,
 		"`",
 		"`",
@@ -1035,6 +1057,8 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		processName,
 		processName,
 		processName,
+		processName,
+
 		processName,
 		processName,
 		processName,
@@ -1052,6 +1076,8 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		processName,
 		processName,
 		processName,
+
+		processName,
 		processName,
 		tableName,
 		processName,
@@ -1066,6 +1092,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		processName,
 		tableName,
 		processName,
+		processName,
 	)
 
 	err = os.WriteFile(filePathHandler, []byte(handlerCode), 0o644)
@@ -1073,5 +1100,99 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		return fmt.Errorf("failed to write handler file: %w", err)
 	}
 
+	// edit file storage
+	generateCodeStorage := fmt.Sprintf(`
+	%s interface {
+		Create(context.Context, *%s) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*%s, error)
+	}
+`,
+		processName,
+		processName,
+		processName,
+	)
+	generateCodeConstructor := fmt.Sprintf(`
+		%s:   &%sStore{db},
+`, processName, processName)
+
+	// edit file routes
+	generateCodeRoutes := fmt.Sprintf(`
+			r.Route("/%s", func(r chi.Router) {
+				r.Post("/", app.create%sHandler)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", app.getById%sHandler)
+					r.Delete("/", app.cancel%sHandler)
+				})
+			})	
+`, tableName, processName, processName, processName)
+
+	err = insertGeneratedCode(filePathEditStorage, generateCodeStorage, "// GENERATED CODE INTERFACE")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditStorage, generateCodeConstructor, "// GENERATED CODE CONSTRUCTOR")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditRoutes, generateCodeRoutes, "// GENERATE ROUTES API")
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func insertGeneratedCode(filePath, generateCode, containString string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+		if strings.Contains(line, containString) {
+			lines = append(lines, generateCode)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	output := strings.Join(lines, "\n")
+	err = os.WriteFile(filePath, []byte(output), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+func getModuleName() (string, error) {
+	file, err := os.Open("go.mod")
+	if err != nil {
+		return "", fmt.Errorf("failed to open go.mod: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "module ") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "module ")), nil
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("failed to read go.mod: %w", err)
+	}
+
+	return "", fmt.Errorf("module name not found in go.mod")
 }

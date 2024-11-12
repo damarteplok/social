@@ -1,5 +1,4 @@
 package store
-
 import (
 	"context"
 	"database/sql"
@@ -8,17 +7,18 @@ import (
 )
 
 const (
-	ReviewSomethingID             = "review_something"
-	ReviewSomethingName           = "review something"
-	ReviewSomethingFormID         = "review_bikin_something"
-	ReviewSomethingAssignee       = ""
+	ReviewSomethingID = "review_something"
+	ReviewSomethingName = "review something"
+	ReviewSomethingFormID = "review_bikin_something"
+	ReviewSomethingAssignee = ""
 	ReviewSomethingCandidateGroup = ""
-	ReviewSomethingCandidateUser  = ""
-	ReviewSomethingSchedule       = ``
+	ReviewSomethingCandidateUser = ""
+	ReviewSomethingSchedule = ``
+
 )
 
 type ReviewSomething struct {
-	ID         int64    `json:"id"`
+    ID         int64    `json:"id"`
 	Name       string   `json:"name"`
 	FormId     string   `json:"form_id"`
 	Properties []string `json:"properties"`
@@ -48,7 +48,7 @@ func (s *ReviewSomethingStore) Delete(ctx context.Context, id int64) error {
 			return err
 		}
 		return nil
-	})
+	})	
 }
 
 func (s *ReviewSomethingStore) Update(ctx context.Context, model *ReviewSomething) error {
@@ -59,7 +59,7 @@ func (s *ReviewSomethingStore) Update(ctx context.Context, model *ReviewSomethin
 		return nil
 	})
 }
-
+	
 func (s *ReviewSomethingStore) create(ctx context.Context, tx *sql.Tx, model *ReviewSomething) error {
 	if model.Properties == nil {
 		model.Properties = []string{}
@@ -112,7 +112,8 @@ func (s *ReviewSomethingStore) create(ctx context.Context, tx *sql.Tx, model *Re
 
 func (s *ReviewSomethingStore) GetByID(ctx context.Context, id int64) (*ReviewSomething, error) {
 	query := `
-		SELECT id, name, form_id, properties, created_by, updated_by, created_at, updated_at
+		SELECT id, name, form_id, properties, created_by, 
+		updated_by, created_at, updated_at
 		FROM reviewsomething
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -140,7 +141,7 @@ func (s *ReviewSomethingStore) GetByID(ctx context.Context, id int64) (*ReviewSo
 			return nil, err
 		}
 	}
-
+		
 	if len(propertiesData) > 0 {
 		if err := json.Unmarshal(propertiesData, &model.Properties); err != nil {
 			return nil, err
@@ -176,6 +177,7 @@ func (s *ReviewSomethingStore) delete(ctx context.Context, tx *sql.Tx, id int64)
 }
 
 func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *ReviewSomething) error {
+
 	if model.Properties == nil {
 		model.Properties = []string{}
 	}
@@ -188,7 +190,7 @@ func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Re
 		UPDATE reviewsomething
 		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
 		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at updated_at;
+		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -203,7 +205,15 @@ func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Re
 		propertiesJSON,
 		model.UpdatedBy,
 		model.ID,
-	).Scan(&model.ID, &model.Name, &model.FormId, propertiesData, &model.CreatedBy, &model.UpdatedBy, &model.CreatedAt, &model.UpdatedAt)
+	).Scan(&model.ID, 
+		&model.Name, 
+		&model.FormId, 
+		propertiesData, 
+		&model.CreatedBy, 
+		&model.UpdatedBy, 
+		&model.CreatedAt, 
+		&model.UpdatedAt,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -215,3 +225,4 @@ func (s *ReviewSomethingStore) update(ctx context.Context, tx *sql.Tx, model *Re
 
 	return nil
 }
+
