@@ -1337,8 +1337,8 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		processName,
 		processName,
 		processName,
-		processName,
 		tableName,
+		processName,
 		processName,
 		processName,
 
