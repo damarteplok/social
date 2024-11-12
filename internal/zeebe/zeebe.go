@@ -1189,11 +1189,6 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
-
 	// delete model
 	if err := app.store.%s.Delete(ctx, model.ID); err != nil {
 		app.internalServerError(w, r, err)
@@ -1336,8 +1331,8 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		processName,
 		processName,
 		processName,
-		processName,
 		tableName,
+		processName,
 		processName,
 		processName,
 		processName,
