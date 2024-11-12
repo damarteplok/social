@@ -142,26 +142,20 @@ func (app *application) mount() http.Handler {
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", app.getByIdKantorNgetesIdHandler)
 					r.Delete("/", app.cancelKantorNgetesIdHandler)
+					r.Get("/history", func(w http.ResponseWriter, r *http.Request) {})
 				})
-			})	
-
+			})
 
 			// GENERATE USER TASK ROUTES API
 
 			r.Route("/setujuisomething", func(r chi.Router) {
-			
-			})	
-
+			})
 
 			r.Route("/reviewsomething", func(r chi.Router) {
-			
-			})	
-
+			})
 
 			r.Route("/bikinsomething", func(r chi.Router) {
-			
-			})	
-
+			})
 		})
 	})
 

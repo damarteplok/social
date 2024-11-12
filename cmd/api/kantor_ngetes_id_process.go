@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,10 +14,10 @@ import (
 )
 
 type CreateKantorNgetesIdPayload struct {
-	Variables   		 *map[string]string  `json:"variables,omitempty"`
+	Variables *map[string]string `json:"variables,omitempty"`
 }
 type UpdateKantorNgetesIdPayload struct {
-	Variables            *map[string]string  `json:"variables,omitempty"`
+	Variables *map[string]string `json:"variables,omitempty"`
 }
 type DataStoreKantorNgetesIdWrapper struct {
 	Data store.KantorNgetesId `json:"data"`
@@ -50,7 +53,7 @@ func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 
 	// TODO: Change in this code
 	// TODO: ADD to storage interface for use create store
-	
+
 	ctx := r.Context()
 	variables := make(map[string]interface{})
 	variables["user"] = user
@@ -93,7 +96,6 @@ func (app *application) createKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 	}
 }
 
-
 // Cancel KantorNgetesId godoc
 //
 //	@Summary		Cancel KantorNgetesId
@@ -119,22 +121,10 @@ func (app *application) cancelKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.KantorNgetesId.Get(ctx, id)
+	model, err := app.getKantorNgetesId(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
-	}
-
-	if model == nil {
-		model, err = app.store.KantorNgetesId.GetByID(ctx, id)
-		if err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
-		if err := app.cacheStorage.KantorNgetesId.Set(ctx, model); err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
 	}
 
 	// delete model
@@ -157,7 +147,6 @@ func (app *application) cancelKantorNgetesIdHandler(w http.ResponseWriter, r *ht
 		return
 	}
 }
-
 
 // GetById KantorNgetesId godoc
 //
@@ -185,25 +174,107 @@ func (app *application) getByIdKantorNgetesIdHandler(w http.ResponseWriter, r *h
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.KantorNgetesId.Get(ctx, id)
+	model, err := app.getKantorNgetesId(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
 	}
-		
-	if model == nil {
-		model, err = app.store.KantorNgetesId.GetByID(ctx, id)
-		if err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
-		if err := app.cacheStorage.KantorNgetesId.Set(ctx, model); err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
-	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// GetHistoryById KantorNgetesId godoc
+//
+//	@Summary		GetHistoryById KantorNgetesId
+//	@Description	GetHistoryById KantorNgetesId
+//	@Tags			bpmn/KantorNgetesId
+//	@Accept			json
+//	@produce		json
+//	@Param			id	path		int		true	"ID from table"
+//	@Param			size	query		string	false	"Size"
+//	@Param			order	query		string	false	"Order"
+//	@Param			sort	query		string	false	"Sort"
+//	@Param			searchAfter	query		string	false	"SearchAfter"
+//	@Success		200	{string}	string	"KantorNgetesId GetHistoryById"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/kantor_ngetes_id/{id}/history  [get]
+func (app *application) getHistoryByIdKantorNgetesIdHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	size := r.URL.Query().Get("size")
+	if size == "" {
+		size = "50"
+	}
+
+	order := r.URL.Query().Get("order")
+	if order == "" {
+		order = "desc"
+	}
+
+	sort := r.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "creationTime"
+	}
+
+	searchAfter := r.URL.Query().Get("searchAfter")
+	if searchAfter == "" {
+		searchAfter = "[]"
+	} else {
+		searchAfter = fmt.Sprintf("[%s]", searchAfter)
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.getKantorNgetesId(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	body := []byte(fmt.Sprintf(`
+	{
+		"filter": {
+			"processInstanceKey": %d
+		}, 
+		"size": %s, 
+		"sort": [{"field": "%s", "order": "%s"}], 
+		"searchAfter": %s
+	}`,
+		model.ProcessInstanceKey, size, sort, order, searchAfter))
+
+	// get history from operate api rest api
+	url := fmt.Sprintf("%s/v1/flownode-instances/search", app.config.camundaRest.camundaOperateBaseUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

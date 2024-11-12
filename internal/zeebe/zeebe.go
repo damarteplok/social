@@ -1053,7 +1053,10 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	handlerCode := fmt.Sprintf(`package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -1171,22 +1174,10 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.%s.Get(ctx, id)
+	model, err := app.get%s(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
-	}
-
-	if model == nil {
-		model, err = app.store.%s.GetByID(ctx, id)
-		if err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
-		if err := app.cacheStorage.%s.Set(ctx, model); err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
 	}
 
 	// delete model
@@ -1237,22 +1228,10 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.cacheStorage.%s.Get(ctx, id)
+	model, err := app.get%s(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
-	}
-		
-	if model == nil {
-		model, err = app.store.%s.GetByID(ctx, id)
-		if err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
-		if err := app.cacheStorage.%s.Set(ctx, model); err != nil {
-			app.handleRequestError(w, r, err)
-			return
-		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, model); err != nil {
@@ -1305,13 +1284,9 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		tableName,
 		processName,
 		processName,
-
-		processName,
-		processName,
-		processName,
-		processName,
-
 		// cancel
+		processName,
+		processName,
 		processName,
 		processName,
 		processName,
@@ -1324,9 +1299,6 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		processName,
 		processName,
 		processName,
-		processName,
-		processName,
-
 		// get by id
 		processName,
 		processName,
@@ -1336,7 +1308,7 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		processName,
 		processName,
 		processName,
-
+		// get
 		processName,
 		processName,
 		processName,
