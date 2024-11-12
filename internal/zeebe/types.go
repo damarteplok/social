@@ -39,6 +39,10 @@ type FormDefinition struct {
 	FormID string `xml:"formId,attr"`
 }
 
+type Propertie struct {
+	Property string `xml:"property,attr"`
+}
+
 type TaskDefinition struct {
 	Type string `xml:"type,attr"`
 }
@@ -59,6 +63,7 @@ type ExtensionElement struct {
 	AssignmentDefinitions []AssignmentDefinition `xml:"assignmentDefinition"`
 	TaskSchedules         []TaskSchedule         `xml:"taskSchedule"`
 	TaskDefinitions       []TaskDefinition       `xml:"taskDefinition"`
+	properties            []Propertie            `xml:"properties"`
 }
 
 type UserTask struct {
@@ -99,4 +104,19 @@ type ZeebeClientRest struct {
 	httpClient   *http.Client
 	tokenManager *TokenManager
 	zeebeAddr    string
+}
+
+// form id
+type FormComponent struct {
+	Label       string `json:"label"`
+	Type        string `json:"type"`
+	Key         string `json:"key"`
+	Description string `json:"description"`
+	Validate    struct {
+		Required bool `json:"required"`
+	} `json:"validate"`
+}
+
+type Form struct {
+	Components []FormComponent `json:"components"`
 }

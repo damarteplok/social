@@ -198,6 +198,47 @@ type SearchTaskListPayload struct {
 	SearchBeforeOrEqual  []string             `json:"searchBeforeOrEqual,omitempty"`
 }
 
+type QueryUserTaskPayload struct {
+	Sort   []Sort `json:"sort"`
+	Filter Filter `json:"filter,omitempty"`
+	Page   Page   `json:"page,omitempty"`
+}
+
+type Page struct {
+	From         int64                `json:"from"`
+	Limit        int64                `json:"limit"`
+	SearchAfter  []SearchAfterPayload `json:"searchAfter"`
+	SearchBefore []SearchAfterPayload `json:"searchBefore"`
+}
+
+type SearchAfterPayload struct {
+	Object []interface{} `json:"object,omitempty"`
+}
+
+type Variable struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type Filter struct {
+	Key                  int64      `json:"key,omitempty"`
+	State                string     `json:"state,omitempty"`
+	Assignee             string     `json:"assignee,omitempty"`
+	ElementId            string     `json:"elementId,omitempty"`
+	CandidateGroup       string     `json:"candidateGroup,omitempty"`
+	CandidateUser        string     `json:"candidateUser,omitempty"`
+	ProcessDefinitionKey int64      `json:"processDefinitionKey,omitempty"`
+	ProcessInstanceKey   int64      `json:"processInstanceKey,omitempty"`
+	TenantIds            string     `json:"tenantIds,omitempty"`
+	ProcessDefinitionId  string     `json:"processDefinitionId,omitempty"`
+	Variables            []Variable `json:"variables,omitempty"`
+}
+
+type Sort struct {
+	Field string `json:"field" validate:"required"`
+	Order string `json:"order,omitempty"`
+}
+
 func (p *SearchTaskListPayload) IsValidState() error {
 	switch p.State {
 	case StateCreated, StateCompleted, StateCanceled, StateFailed:

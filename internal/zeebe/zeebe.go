@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"context"
 	"embed"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -248,6 +250,12 @@ func generateCrudUserTask(userTask UserTask) error {
 		}
 	}
 
+	moduleName, errModule := getModuleName()
+	if errModule != nil {
+		return errModule
+	}
+
+	filePathHandler := fmt.Sprintf("./cmd/api/%s_user_task.go", nameFile)
 	filePathScripts := fmt.Sprintf("./scripts/%s_user_task.sql", nameFile)
 	scriptCode := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	id BIGSERIAL PRIMARY KEY,
@@ -557,13 +565,194 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		return fmt.Errorf("failed to write model file: %w", err)
 	}
 
+	// if formID is not empty then generate code form
+	structCode := ""
+	if formID != "" {
+		formFile := idServiceTask + ".form"
+		filePathForm := fmt.Sprintf("./internal/zeebe/resources/%s", formFile)
+
+		form, errForm := readFormFile(filePathForm)
+		if errForm != nil {
+			return errForm
+		}
+
+		structCode = generateStructCode(form, userTaskName)
+	}
+
+	// create handler usertask
+	handlerUserTaskCode := fmt.Sprintf(`package main
+
+%s
+	
+`, structCode)
+
+	err = os.WriteFile(filePathHandler, []byte(handlerUserTaskCode), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write handler file: %w", err)
+	}
+
+	filePathEditRoutes := "./cmd/api/api.go"
+	generateCodeRoutes := fmt.Sprintf(`
+			r.Route("/%s", func(r chi.Router) {
+			
+			})	
+`, nameFile)
+
+	err = insertGeneratedCode(filePathEditRoutes, generateCodeRoutes, "// GENERATE USER TASK ROUTES API")
+	if err != nil {
+		return err
+	}
+
+	filePathEditStorage := "./internal/store/storage.go"
+
+	// edit file storage
+	generateCodeStorage := fmt.Sprintf(`
+		%s interface {
+			Create(context.Context, *%s) error
+			Delete(context.Context, int64) error
+			GetByID(context.Context, int64) (*%s, error)
+		}
+`,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+	)
+	generateCodeConstructor := fmt.Sprintf(`
+			%s:   &%sStore{db},
+`, userTaskName, userTaskName)
+
+	err = insertGeneratedCode(filePathEditStorage, generateCodeStorage, "// GENERATED CODE INTERFACE")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditStorage, generateCodeConstructor, "// GENERATED CODE CONSTRUCTOR")
+	if err != nil {
+		return err
+	}
+
+	// cache
+	filePathEditCacheStorage := "./internal/store/cache/storage.go"
+	filePathStoreCache := fmt.Sprintf("./internal/store/cache/%s_user_task.go", nameFile)
+	modelCacheCode := fmt.Sprintf(`package cache
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"%s/internal/store"
+	"github.com/go-redis/redis/v8"
+)
+
+type %sStore struct {
+	rdb *redis.Client
+}
+
+const %sExpTime = time.Hour * 24 * 7
+	
+func (s *%sStore) Get(ctx context.Context, modelID int64) (*store.%s, error) {
+	cacheKey := fmt.Sprintf("%s-%s", modelID)
+
+	data, err := s.rdb.Get(ctx, cacheKey).Result()
+	if err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	var model store.%s
+	if data != "" {
+		err := json.Unmarshal([]byte(data), &model)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &model, nil
+}
+
+func (s *%sStore) Set(ctx context.Context, model *store.%s) error {
+	cacheKey := fmt.Sprintf("%s-%s", model.ID)
+
+	json, err := json.Marshal(model)
+	if err != nil {
+		return err
+	}
+	return s.rdb.SetEX(ctx, cacheKey, json, %sExpTime).Err()
+}
+
+func (s *%sStore) Delete(ctx context.Context, modelID int64) {
+	cacheKey := fmt.Sprintf("%s-%s", modelID)
+	s.rdb.Del(ctx, cacheKey)
+}
+`,
+		moduleName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		"%v",
+		userTaskName,
+
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		"%v",
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+	)
+
+	err = os.WriteFile(filePathStoreCache, []byte(modelCacheCode), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write cache file: %w", err)
+	}
+
+	// edit file cache storage
+	generateCodeCacheStorage := fmt.Sprintf(`
+		%s interface {
+			Get(context.Context, int64) (*store.%s, error)
+			Set(context.Context, *store.%s) error
+			Delete(context.Context, int64)
+		}
+`,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+	)
+
+	generateCodeCacheInterface := fmt.Sprintf(`
+			%s: &%sStore{
+				rdb: rbd,
+			},
+`,
+		userTaskName,
+		userTaskName,
+	)
+
+	err = insertGeneratedCode(filePathEditCacheStorage, generateCodeCacheStorage, "// GENERATED CACHE CODE INTERFACE")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditCacheStorage, generateCodeCacheInterface, "// GENERATED CACHE CODE CONSTRUCTOR")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func generateCrudProcess(processName, resourceName, tableName string, version int32, processDefinitionKey int64) error {
 	filePathHandler := fmt.Sprintf("./cmd/api/%s_process.go", tableName)
 	filePathStore := fmt.Sprintf("./internal/store/%s_process.go", tableName)
+	filePathStoreCache := fmt.Sprintf("./internal/store/cache/%s_process.go", tableName)
 	filePathScripts := fmt.Sprintf("./scripts/%s_process.sql", tableName)
+	filePathEditCacheStorage := "./internal/store/cache/storage.go"
 	filePathEditStorage := "./internal/store/storage.go"
 	filePathEditRoutes := "./cmd/api/api.go"
 
@@ -982,7 +1171,7 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.store.%s.GetByID(ctx, id)
+	model, err := app.cacheStorage.%s.GetByID(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
@@ -999,6 +1188,9 @@ func (app *application) cancel%sHandler(w http.ResponseWriter, r *http.Request) 
 		app.internalServerError(w, r, err)
 		return
 	}
+
+	// delete cache
+	app.cacheStorage.%s.Delete(ctx, model.ID)
 
 	if err := app.jsonResponse(w, http.StatusOK, "success"); err != nil {
 		app.internalServerError(w, r, err)
@@ -1033,7 +1225,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	model, err := app.store.%s.GetByID(ctx, id)
+	model, err := app.cacheStorage.%s.GetByID(ctx, id)
 	if err != nil {
 		app.handleRequestError(w, r, err)
 		return
@@ -1043,6 +1235,29 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		app.internalServerError(w, r, err)
 		return
 	}
+}
+
+func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, error) {
+	if !app.config.redisCfg.enabled {
+		return app.store.%s.GetByID(ctx, modelID)
+	}
+
+	model, err := app.cacheStorage.%s.Get(ctx, modelID)
+	if err != nil {
+		return nil, err
+	}
+
+	if model == nil {
+		model, err = app.store.%s.GetByID(ctx, modelID)
+		if err != nil {
+			return nil, err
+		}
+		if err := app.cacheStorage.%s.Set(ctx, model); err != nil {
+			return nil, err
+		}
+	}
+
+	return model, nil
 }
 `,
 		moduleName,
@@ -1083,6 +1298,7 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		processName,
 		processName,
 		processName,
+		processName,
 
 		// get by id
 		processName,
@@ -1093,11 +1309,96 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 		tableName,
 		processName,
 		processName,
+
+		processName,
+		processName,
+		processName,
+		processName,
+		processName,
+		processName,
 	)
 
 	err = os.WriteFile(filePathHandler, []byte(handlerCode), 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write handler file: %w", err)
+	}
+
+	modelCacheCode := fmt.Sprintf(`package cache
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"%s/internal/store"
+	"github.com/go-redis/redis/v8"
+)
+
+type %sStore struct {
+	rdb *redis.Client
+}
+
+const %sExpTime = time.Hour * 24 * 7
+	
+func (s *%sStore) Get(ctx context.Context, modelID int64) (*store.%s, error) {
+	cacheKey := fmt.Sprintf("%s-%s", modelID)
+
+	data, err := s.rdb.Get(ctx, cacheKey).Result()
+	if err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	var model store.%s
+	if data != "" {
+		err := json.Unmarshal([]byte(data), &model)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &model, nil
+}
+
+func (s *%sStore) Set(ctx context.Context, model *store.%s) error {
+	cacheKey := fmt.Sprintf("%s-%s", model.ID)
+
+	json, err := json.Marshal(model)
+	if err != nil {
+		return err
+	}
+	return s.rdb.SetEX(ctx, cacheKey, json, %sExpTime).Err()
+}
+
+func (s *%sStore) Delete(ctx context.Context, modelID int64) {
+	cacheKey := fmt.Sprintf("%s-%s", modelID)
+	s.rdb.Del(ctx, cacheKey)
+}
+`,
+		moduleName,
+		processName,
+		processName,
+		processName,
+		processName,
+		processName,
+		"%v",
+		processName,
+
+		processName,
+		processName,
+		processName,
+		"%v",
+		processName,
+		processName,
+		processName,
+		processName,
+	)
+
+	err = os.WriteFile(filePathStoreCache, []byte(modelCacheCode), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write cache file: %w", err)
 	}
 
 	// edit file storage
@@ -1127,6 +1428,28 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 			})	
 `, tableName, processName, processName, processName)
 
+	// edit file cache storage
+	generateCodeCacheStorage := fmt.Sprintf(`
+	%s interface {
+		Get(context.Context, int64) (*store.%s, error)
+		Set(context.Context, *store.%s) error
+		Delete(context.Context, int64)
+	}
+`,
+		processName,
+		processName,
+		processName,
+	)
+
+	generateCodeCacheInterface := fmt.Sprintf(`
+	%s: &%sStore{
+			rdb: rbd,
+		},
+`,
+		processName,
+		processName,
+	)
+
 	err = insertGeneratedCode(filePathEditStorage, generateCodeStorage, "// GENERATED CODE INTERFACE")
 	if err != nil {
 		return err
@@ -1138,6 +1461,16 @@ func (app *application) getById%sHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	err = insertGeneratedCode(filePathEditRoutes, generateCodeRoutes, "// GENERATE ROUTES API")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditCacheStorage, generateCodeCacheStorage, "// GENERATED CACHE CODE INTERFACE")
+	if err != nil {
+		return err
+	}
+
+	err = insertGeneratedCode(filePathEditCacheStorage, generateCodeCacheInterface, "// GENERATED CACHE CODE CONSTRUCTOR")
 	if err != nil {
 		return err
 	}
@@ -1195,4 +1528,65 @@ func getModuleName() (string, error) {
 	}
 
 	return "", fmt.Errorf("module name not found in go.mod")
+}
+
+func readFormFile(filePath string) (*Form, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open form file: %w", err)
+	}
+	defer file.Close()
+
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read form file: %w", err)
+	}
+
+	var form Form
+	if err := json.Unmarshal(byteValue, &form); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal form JSON: %w", err)
+	}
+
+	return &form, nil
+}
+
+func generateStructCode(form *Form, name string) string {
+	structCode := "type FormData" + name + " struct {\n"
+	for _, component := range form.Components {
+		if component.Key == "" {
+			continue
+		}
+		fieldName := toCamelCaseForm(component.Key)
+		fieldType := getFieldType(component.Type)
+		tag := fmt.Sprintf("`json:\"%s", component.Key)
+		if component.Validate.Required {
+			tag += "\" validate:\"required\"`"
+		} else {
+			tag += ",omitempty\"`"
+		}
+		structCode += fmt.Sprintf("\t%s %s %s\n", fieldName, fieldType, tag)
+	}
+	structCode += "}\n"
+	return structCode
+}
+
+func toCamelCaseForm(snakeStr string) string {
+	parts := strings.Split(snakeStr, "_")
+	for i := range parts {
+		parts[i] = strings.Title(parts[i])
+	}
+	return strings.Join(parts, "")
+}
+
+func getFieldType(fieldType string) string {
+	switch fieldType {
+	case "textfield", "textarea":
+		return "string"
+	case "number":
+		return "float64"
+	case "select":
+		return "string"
+	default:
+		return "interface{}"
+	}
 }

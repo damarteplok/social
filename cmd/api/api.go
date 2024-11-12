@@ -84,12 +84,12 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-		r.Route("/camunda", func(r chi.Router) {
+		r.With(app.BasicAuthMiddleware()).Route("/camunda", func(r chi.Router) {
 			r.Route("/resource", func(r chi.Router) {
-				r.With(app.BasicAuthMiddleware()).Post("/deploy", app.deployOnlyCamundaHandler)
-				r.With(app.BasicAuthMiddleware()).Post("/crud", app.crudCamundaHandler)
-				r.With(app.BasicAuthMiddleware()).Post("/deploy-crud", app.deployCamundaHandler)
-				r.With(app.BasicAuthMiddleware()).Post("/{resourceKey}/delete", func(w http.ResponseWriter, r *http.Request) {})
+				r.Post("/deploy", app.deployOnlyCamundaHandler)
+				r.Post("/crud", app.crudCamundaHandler)
+				r.Post("/deploy-crud", app.deployCamundaHandler)
+				r.Post("/{processDefinitionKey}/delete", app.deleteCamundaHandler)
 			})
 			r.Route("/job", func(r chi.Router) {
 				r.Post("/activate", func(w http.ResponseWriter, r *http.Request) {})
@@ -102,7 +102,7 @@ func (app *application) mount() http.Handler {
 			})
 			r.Route("/incident", func(r chi.Router) {
 				r.Route("/{incidentKey}", func(r chi.Router) {
-					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+					r.Post("/resolve", app.resolveIncidentHandler)
 				})
 			})
 			r.Route("/usertask", func(r chi.Router) {
@@ -113,7 +113,7 @@ func (app *application) mount() http.Handler {
 					r.Post("/unassignment", func(w http.ResponseWriter, r *http.Request) {})
 				})
 			})
-			r.With(app.BasicAuthMiddleware()).Route("/process-instance", func(r chi.Router) {
+			r.Route("/process-instance", func(r chi.Router) {
 				r.Post("/", app.createProsesInstance)
 				r.Route("/{processinstanceKey}", func(r chi.Router) {
 					r.Post("/cancel", app.cancelProcessInstance)
@@ -123,8 +123,13 @@ func (app *application) mount() http.Handler {
 				r.Patch("/publish", func(w http.ResponseWriter, r *http.Request) {})
 				r.Patch("/correlate", func(w http.ResponseWriter, r *http.Request) {})
 			})
-			r.Route("/tasklist", func(r chi.Router) {
+			r.Route("/user-task", func(r chi.Router) {
 				r.Post("/", app.searchTaskListHandler)
+				r.Post("/search", app.searchUserTaskHandler)
+				r.Route("/{userTaskKey}", func(r chi.Router) {
+					// r.Post("/complete", app.completeTaskHandler)
+					// r.Post("/assign", app.assignTaskHandler)
+				})
 			})
 		})
 
@@ -132,31 +137,7 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 			// GENERATE ROUTES API
 
-			r.Route("/pesen_ke_restorant", func(r chi.Router) {
-				r.Post("/", app.createPesenKeRestorantHandler)
-				r.Route("/{id}", func(r chi.Router) {
-					r.Get("/", app.getByIdPesenKeRestorantHandler)
-					r.Delete("/", app.cancelPesenKeRestorantHandler)
-				})
-			})	
-
-
-			r.Route("/kantor_ngetes_id", func(r chi.Router) {
-				r.Post("/", app.createKantorNgetesIdHandler)
-				r.Route("/{id}", func(r chi.Router) {
-					r.Get("/", app.getByIdKantorNgetesIdHandler)
-					r.Delete("/", app.cancelKantorNgetesIdHandler)
-				})
-			})	
-
-
-			r.Route("/Process_1hti3q2", func(r chi.Router) {
-				r.Post("/", app.createProcess1hti3q2Handler)
-				r.Route("/{id}", func(r chi.Router) {
-					r.Get("/", app.getByIdProcess1hti3q2Handler)
-					r.Delete("/", app.cancelProcess1hti3q2Handler)
-				})
-			})
+			// GENERATE USER TASK ROUTES API
 		})
 	})
 

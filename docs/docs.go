@@ -116,284 +116,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/bpmn/Process_1hti3q2": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create Process1hti3q2",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/Process1hti3q2"
-                ],
-                "summary": "Create Process1hti3q2",
-                "parameters": [
-                    {
-                        "description": "Process1hti3q2 Payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.CreateProcess1hti3q2Payload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Process1hti3q2 Created",
-                        "schema": {
-                            "$ref": "#/definitions/main.DataStoreProcess1hti3q2Wrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
-        "/bpmn/Process_1hti3q2/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "GetById Process1hti3q2",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/Process1hti3q2"
-                ],
-                "summary": "GetById Process1hti3q2",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID from table",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Process1hti3q2 GetById",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Cancel Process1hti3q2",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/Process1hti3q2"
-                ],
-                "summary": "Cancel Process1hti3q2",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Process1hti3q2 Canceled",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
-        "/bpmn/kantor_ngetes_id": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "Create KantorNgetesId",
-                "parameters": [
-                    {
-                        "description": "KantorNgetesId Payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.CreateKantorNgetesIdPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "KantorNgetesId Created",
-                        "schema": {
-                            "$ref": "#/definitions/main.DataStoreKantorNgetesIdWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
-        "/bpmn/kantor_ngetes_id/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "GetById KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "GetById KantorNgetesId",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID from table",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "KantorNgetesId GetById",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Cancel KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "Cancel KantorNgetesId",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ProcessInstanceKey",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "KantorNgetesId Canceled",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
         "/bpmn/pesen_ke_restorant": {
             "post": {
                 "security": [
@@ -533,14 +255,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/camunda/process-instance": {
+        "/camunda/incident/{incidentKey}/resolve": {
             "post": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Create Proses Instance form rest api",
+                "description": "Resolve Incident Bpmn Camunda",
                 "consumes": [
                     "application/json"
                 ],
@@ -548,9 +270,58 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/incident"
                 ],
-                "summary": "Create Proses Instance form rest api",
+                "summary": "Resolve Incident Bpmn Camunda",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "incidentKey",
+                        "name": "incidentKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/process-instance": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Create Proses Instance from rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/process-instance"
+                ],
+                "summary": "Create Proses Instance from rest api",
                 "parameters": [
                     {
                         "description": "Create Proses Instance Payload",
@@ -587,7 +358,7 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Cancel Proses Instance form rest api",
+                "description": "Cancel Proses Instance from rest api",
                 "consumes": [
                     "application/json"
                 ],
@@ -595,9 +366,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/process-instance"
                 ],
-                "summary": "Cancel Proses Instance form rest api",
+                "summary": "Cancel Proses Instance from rest api",
                 "parameters": [
                     {
                         "type": "integer",
@@ -640,7 +411,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/resource"
                 ],
                 "summary": "CRUD Store And Handler",
                 "parameters": [
@@ -687,7 +458,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/resource"
                 ],
                 "summary": "Deploy Only Bpmn Camunda",
                 "parameters": [
@@ -734,9 +505,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/resource"
                 ],
-                "summary": "Deploy Bpmn Camunda",
+                "summary": "Deploy Bpmn Camunda and Create CRUD in Store And Handler File",
                 "parameters": [
                     {
                         "description": "Deploy Bpmn Payload",
@@ -766,14 +537,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/camunda/tasklist": {
-            "post": {
+        "/camunda/resource/{processDefinitionKey}/delete": {
+            "delete": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Search TaskList form rest api",
+                "description": "Delete Bpmn Camunda",
                 "consumes": [
                     "application/json"
                 ],
@@ -781,9 +552,58 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "camunda"
+                    "camunda/resource"
                 ],
-                "summary": "Search TaskList form rest api",
+                "summary": "Delete Bpmn Camunda",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Process Definition Key",
+                        "name": "processDefinitionKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/user-task": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Search TaskList from rest api v1",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/user-task"
+                ],
+                "summary": "Search TaskList from rest api v1",
                 "parameters": [
                     {
                         "description": "Search TaskList Payload",
@@ -800,6 +620,53 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/main.SearchTaskListPayload"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/user-task/search": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Search User Task from rest api v2 must enabled in camunda-platform config first",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/user-task"
+                ],
+                "summary": "Search User Task from rest api v2 must enabled in camunda-platform config first",
+                "parameters": [
+                    {
+                        "description": "Query User Task Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.QueryUserTaskPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.QueryUserTaskPayload"
                         }
                     },
                     "400": {
@@ -1230,17 +1097,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.CreateKantorNgetesIdPayload": {
-            "type": "object",
-            "properties": {
-                "variables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "main.CreatePesenKeRestorantPayload": {
             "type": "object",
             "properties": {
@@ -1272,17 +1128,6 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "maxLength": 100
-                }
-            }
-        },
-        "main.CreateProcess1hti3q2Payload": {
-            "type": "object",
-            "properties": {
-                "variables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -1396,14 +1241,6 @@ const docTemplate = `{
                 }
             }
         },
-        "main.DataStoreKantorNgetesIdWrapper": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/store.KantorNgetesId"
-                }
-            }
-        },
         "main.DataStorePesenKeRestorantWrapper": {
             "type": "object",
             "properties": {
@@ -1417,14 +1254,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/store.Post"
-                }
-            }
-        },
-        "main.DataStoreProcess1hti3q2Wrapper": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/store.Process1hti3q2"
                 }
             }
         },
@@ -1454,6 +1283,47 @@ const docTemplate = `{
                 }
             }
         },
+        "main.Filter": {
+            "type": "object",
+            "properties": {
+                "assignee": {
+                    "type": "string"
+                },
+                "candidateGroup": {
+                    "type": "string"
+                },
+                "candidateUser": {
+                    "type": "string"
+                },
+                "elementId": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "integer"
+                },
+                "processDefinitionId": {
+                    "type": "string"
+                },
+                "processDefinitionKey": {
+                    "type": "integer"
+                },
+                "processInstanceKey": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tenantIds": {
+                    "type": "string"
+                },
+                "variables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.Variable"
+                    }
+                }
+            }
+        },
         "main.HealthResponse": {
             "type": "object",
             "properties": {
@@ -1465,6 +1335,46 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "main.Page": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "searchAfter": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.SearchAfterPayload"
+                    }
+                },
+                "searchBefore": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.SearchAfterPayload"
+                    }
+                }
+            }
+        },
+        "main.QueryUserTaskPayload": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/main.Filter"
+                },
+                "page": {
+                    "$ref": "#/definitions/main.Page"
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.Sort"
+                    }
                 }
             }
         },
@@ -1488,6 +1398,15 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "maxLength": 100
+                }
+            }
+        },
+        "main.SearchAfterPayload": {
+            "type": "object",
+            "properties": {
+                "object": {
+                    "type": "array",
+                    "items": {}
                 }
             }
         },
@@ -1571,6 +1490,20 @@ const docTemplate = `{
                 }
             }
         },
+        "main.Sort": {
+            "type": "object",
+            "required": [
+                "field"
+            ],
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
+                }
+            }
+        },
         "main.SortSearchTasklist": {
             "type": "object",
             "properties": {
@@ -1632,6 +1565,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main.Variable": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "store.Comment": {
             "type": "object",
             "properties": {
@@ -1651,47 +1595,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/store.User"
                 },
                 "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "store.KantorNgetesId": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "integer"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "process_definition_key": {
-                    "type": "integer"
-                },
-                "process_instance_key": {
-                    "type": "integer"
-                },
-                "resource_name": {
-                    "type": "string"
-                },
-                "task_definition_id": {
-                    "type": "string"
-                },
-                "task_state": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "type": "integer"
-                },
-                "version": {
                     "type": "integer"
                 }
             }
@@ -1771,47 +1674,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/store.User"
                 },
                 "user_id": {
-                    "type": "integer"
-                },
-                "version": {
-                    "type": "integer"
-                }
-            }
-        },
-        "store.Process1hti3q2": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "integer"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "process_definition_key": {
-                    "type": "integer"
-                },
-                "process_instance_key": {
-                    "type": "integer"
-                },
-                "resource_name": {
-                    "type": "string"
-                },
-                "task_definition_id": {
-                    "type": "string"
-                },
-                "task_state": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "updated_by": {
                     "type": "integer"
                 },
                 "version": {

@@ -19,15 +19,16 @@ const (
 	StateCompleted     = "COMPLETED"
 	StateCanceled      = "CANCELED"
 	StateFailed        = "FAILED"
+	ResourceUrl        = "/v2/resources"
 	ProcessInstanceUrl = "/v2/process-instances"
 	V1TasklistUrl      = "/v1/tasks"
 )
 
 // Deploy godoc
 //
-//	@Summary		Deploy Bpmn Camunda
+//	@Summary		Deploy Bpmn Camunda and Create CRUD in Store And Handler File
 //	@Description	Deploy Bpmn Camunda by Name In Folder Resources And Create CRUD in Store And Handler File
-//	@Tags			camunda
+//	@Tags			camunda/resource
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		DeployBpmnPayload	true	"Deploy Bpmn Payload"
@@ -86,7 +87,7 @@ func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Requ
 //
 //	@Summary		Deploy Only Bpmn Camunda
 //	@Description	Deploy Only Bpmn Camunda by Name In Folder Resources
-//	@Tags			camunda
+//	@Tags			camunda/resource
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		DeployBpmnPayload	true	"Deploy Bpmn Payload"
@@ -136,7 +137,7 @@ func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.
 //
 //	@Summary		CRUD Store And Handler
 //	@Description	CRUD Store And Handler from Payload
-//	@Tags			camunda
+//	@Tags			camunda/resource
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		CrudPayload	true	"Crud Payload"
@@ -175,9 +176,9 @@ func (app *application) crudCamundaHandler(w http.ResponseWriter, r *http.Reques
 
 // Create Proses Instance godoc
 //
-//	@Summary		Create Proses Instance form rest api
-//	@Description	Create Proses Instance form rest api
-//	@Tags			camunda
+//	@Summary		Create Proses Instance from rest api
+//	@Description	Create Proses Instance from rest api
+//	@Tags			camunda/process-instance
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		CreateProcessInstancePayload	true	"Create Proses Instance Payload"
@@ -238,9 +239,9 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 
 // Cancel Proses Instance godoc
 //
-//	@Summary		Cancel Proses Instance form rest api
-//	@Description	Cancel Proses Instance form rest api
-//	@Tags			camunda
+//	@Summary		Cancel Proses Instance from rest api
+//	@Description	Cancel Proses Instance from rest api
+//	@Tags			camunda/process-instance
 //	@Accept			json
 //	@produce		json
 //	@Param			processinstanceKey	path		int	true	"processinstanceskey"
@@ -285,9 +286,9 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 
 // Search TaskList godoc
 //
-//	@Summary		Search TaskList form rest api
-//	@Description	Search TaskList form rest api
-//	@Tags			camunda
+//	@Summary		Search TaskList from rest api v1
+//	@Description	Search TaskList from rest api v1
+//	@Tags			camunda/user-task
 //	@Accept			json
 //	@produce		json
 //	@Param			payload	body		SearchTaskListPayload	true	"Search TaskList Payload"
@@ -295,7 +296,7 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		BasicAuth
-//	@Router			/camunda/tasklist  [post]
+//	@Router			/camunda/user-task  [post]
 func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Request) {
 	var payload SearchTaskListPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -347,6 +348,157 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// Delete godoc
+//
+//	@Summary		Delete Bpmn Camunda
+//	@Description	Delete Bpmn Camunda
+//	@Tags			camunda/resource
+//	@Accept			json
+//	@produce		json
+//
+//	@Param			processDefinitionKey	path		int	true	"Process Definition Key"
+//
+//	@Success		200						{string}	string
+//
+//	@Failure		404						{object}	error
+//
+//	@Failure		400						{object}	error
+//	@Failure		500						{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/resource/{processDefinitionKey}/delete  [delete]
+func (app *application) deleteCamundaHandler(w http.ResponseWriter, r *http.Request) {
+	processDefinitionKey, err := strconv.ParseInt(chi.URLParam(r, "processDefinitionKey"), 10, 64)
+	if err != nil || processDefinitionKey < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	_, err = app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodDelete,
+		fmt.Sprintf("%s/%d/deletion", app.config.camundaRest.zeebeRestAddress+ResourceUrl, processDefinitionKey),
+		nil,
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, "deleted success"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Resolve Incident godoc
+//
+//	@Summary		Resolve Incident Bpmn Camunda
+//	@Description	Resolve Incident Bpmn Camunda
+//	@Tags			camunda/incident
+//	@Accept			json
+//	@produce		json
+//
+//	@Param			incidentKey	path		int	true	"incidentKey"
+//
+//	@Success		200			{string}	string
+//
+//	@Failure		404			{object}	error
+//
+//	@Failure		400			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/incident/{incidentKey}/resolve  [post]
+func (app *application) resolveIncidentHandler(w http.ResponseWriter, r *http.Request) {
+	incidentKey, err := strconv.ParseInt(chi.URLParam(r, "incidentKey"), 10, 64)
+	if err != nil || incidentKey < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	_, err = app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("%s/%d/resolution", app.config.camundaRest.zeebeRestAddress+"/v2/incidents", incidentKey),
+		nil,
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, "resolved success"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Search User Task godoc
+//
+//	@Summary		Search User Task from rest api v2 must enabled in camunda-platform config first
+//	@Description	Search User Task from rest api v2 must enabled in camunda-platform config first
+//	@Tags			camunda/user-task
+//	@Accept			json
+//	@produce		json
+//	@Param			payload	body		QueryUserTaskPayload	true	"Query User Task Payload"
+//	@Success		200		{object}	QueryUserTaskPayload
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		BasicAuth
+//	@Router			/camunda/user-task/search  [post]
+func (app *application) searchUserTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var payload QueryUserTaskPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	url := fmt.Sprintf("%s/v2/user-tasks/search", app.config.camundaRest.zeebeRestAddress)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
 func (app *application) setDefaultSort(payload *SearchTaskListPayload) {
 	if len(payload.Sort) > 1 {
 		for i := range payload.Sort {
@@ -375,6 +527,8 @@ func (app *application) handleRequestError(w http.ResponseWriter, r *http.Reques
 	switch err {
 	case store.ErrNotFound:
 		app.notFoundResponse(w, r, err)
+	case store.ErrMethodNotAllowed:
+		app.methodNotAllowedResponse(w, r, err)
 	default:
 		app.internalServerError(w, r, err)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -89,6 +90,8 @@ func (t *TokenManager) loginFromApp() error {
 }
 
 func (t *TokenManager) GetAuthToken(ctx context.Context) (string, error) {
+	log.Println("Getting auth token")
+	log.Println("Token: ", t.authToken)
 	if t.authToken != "" {
 		if t.isTokenExpired() {
 			err := t.refreshTokenFunc()

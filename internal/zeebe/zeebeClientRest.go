@@ -54,8 +54,12 @@ func (z *ZeebeClientRest) SendRequest(ctx context.Context, method, endpoint stri
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
+	if resp.StatusCode == http.StatusNotFound {
 		return nil, store.ErrNotFound
+	}
+
+	if resp.StatusCode == http.StatusMethodNotAllowed {
+		return nil, store.ErrMethodNotAllowed
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

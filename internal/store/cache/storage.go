@@ -13,6 +13,7 @@ type Storage struct {
 		Set(context.Context, *store.User) error
 		Delete(context.Context, int64)
 	}
+	// GENERATED CACHE CODE INTERFACE
 }
 
 func NewRedisStorage(rbd *redis.Client) Storage {
@@ -20,5 +21,6 @@ func NewRedisStorage(rbd *redis.Client) Storage {
 		Users: &UsersStore{
 			rdb: rbd,
 		},
+		// GENERATED CACHE CODE CONSTRUCTOR
 	}
 }

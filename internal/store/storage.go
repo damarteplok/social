@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	ErrMethodNotAllowed  = errors.New("method not allowed")
 	ErrNotFound          = errors.New("resource not found")
 	ErrConflict          = errors.New("resource already exist")
 	ErrDuplicateEmail    = errors.New("a user with that email already exist")
@@ -45,44 +46,16 @@ type Storage struct {
 		GetByName(context.Context, string) (*Role, error)
 	}
 	// GENERATED CODE INTERFACE
-
-	PesenKeRestorant interface {
-		Create(context.Context, *PesenKeRestorant) error
-		Delete(context.Context, int64) error
-		GetByID(context.Context, int64) (*PesenKeRestorant, error)
-	}
-
-
-	KantorNgetesId interface {
-		Create(context.Context, *KantorNgetesId) error
-		Delete(context.Context, int64) error
-		GetByID(context.Context, int64) (*KantorNgetesId, error)
-	}
-
-
-	Process1hti3q2 interface {
-		Create(context.Context, *Process1hti3q2) error
-		Delete(context.Context, int64) error
-		GetByID(context.Context, int64) (*Process1hti3q2, error)
-	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:          &PostStore{db},
-		Users:          &UserStore{db},
-		Comments:       &CommentStore{db},
-		Followers:      &FollowerStore{db},
-		Roles:          &RoleStore{db},
-		Process1hti3q2: &Process1hti3q2Store{db},
+		Posts:     &PostStore{db},
+		Users:     &UserStore{db},
+		Comments:  &CommentStore{db},
+		Followers: &FollowerStore{db},
+		Roles:     &RoleStore{db},
 		// GENERATED CODE CONSTRUCTOR
-
-		PesenKeRestorant:   &PesenKeRestorantStore{db},
-
-
-		KantorNgetesId:   &KantorNgetesIdStore{db},
-
-
 	}
 }
 
