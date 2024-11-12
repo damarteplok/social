@@ -704,7 +704,7 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 		userTaskName,
 		userTaskName,
 		userTaskName,
-		userTaskName,
+		"%v",
 	)
 
 	err = os.WriteFile(filePathStoreCache, []byte(modelCacheCode), 0o644)
@@ -1393,7 +1393,7 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 		processName,
 		processName,
 		processName,
-		processName,
+		"%v",
 	)
 
 	err = os.WriteFile(filePathStoreCache, []byte(modelCacheCode), 0o644)
@@ -1430,11 +1430,11 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`
-		%s interface {
-			Get(context.Context, int64) (*store.%s, error)
-			Set(context.Context, *store.%s) error
-			Delete(context.Context, int64)
-		}
+	%s interface {
+		Get(context.Context, int64) (*store.%s, error)
+		Set(context.Context, *store.%s) error
+		Delete(context.Context, int64)
+	}
 `,
 		processName,
 		processName,
