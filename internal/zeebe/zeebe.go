@@ -607,18 +607,18 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 	// edit file storage
 	generateCodeStorage := fmt.Sprintf(`
-		%s interface {
-			Create(context.Context, *%s) error
-			Delete(context.Context, int64) error
-			GetByID(context.Context, int64) (*%s, error)
-		}
+	%s interface {
+		Create(context.Context, *%s) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*%s, error)
+	}
 `,
 		userTaskName,
 		userTaskName,
 		userTaskName,
 	)
 	generateCodeConstructor := fmt.Sprintf(`
-			%s:   &%sStore{db},
+		%s:   &%sStore{db},
 `, userTaskName, userTaskName)
 
 	err = insertGeneratedCode(filePathEditStorage, generateCodeStorage, "// GENERATED CODE INTERFACE")
@@ -1262,6 +1262,108 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 
 	return model, nil
 }
+
+// GetHistoryById %s godoc
+//
+//	@Summary		GetHistoryById %s
+//	@Description	GetHistoryById %s
+//	@Tags			bpmn/%s
+//	@Accept			json
+//	@produce		json
+//	@Param			id	path		int		true	"ID from table"
+//	@Param			size	query		string	false	"Size"
+//	@Param			order	query		string	false	"Order"
+//	@Param			sort	query		string	false	"Sort"
+//	@Param			searchAfter	query	string	false	"SearchAfter"
+//	@Param 			searchBefore query 	string false "SearchBefore"
+//	@Success		200	{string}	string	"%s GetHistoryById"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/{id}/history  [get]
+func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	size := r.URL.Query().Get("size")
+	if size == "" {
+		size = "50"
+	}
+
+	order := r.URL.Query().Get("order")
+	if order == "" {
+		order = "desc"
+	}
+
+	sort := r.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "creationTime"
+	}
+
+	searchAfter := r.URL.Query().Get("searchAfter")
+	if searchAfter == "" {
+		searchAfter = "[]"
+	} else {
+		searchAfter = fmt.Sprintf("[%s]", searchAfter)
+	}
+
+	searchBefore := r.URL.Query().Get("searchBefore")
+	if searchBefore == "" {
+		searchBefore = "[]"
+	} else {
+		searchBefore = fmt.Sprintf("[%s]", searchBefore)
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.get%s(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	body := []byte(fmt.Sprintf(%s
+	{
+		"filter": {
+			"processInstanceKey": %s
+		}, 
+		"size": %s, 
+		"sort": [{"field": "%s", "order": "%s"}], 
+		"searchAfter": %s,
+		"searchBefore": %s
+	}%s, model.ProcessInstanceKey, size, sort, order, searchAfter, searchBefore))
+
+	// get history from operate api rest api
+	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaOperateBaseUrl, V1FlowNodeUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
 `,
 		moduleName,
 		processName,
@@ -1315,6 +1417,28 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 		processName,
 		processName,
 		processName,
+
+		// get history
+		processName,
+		processName,
+		processName,
+		processName,
+		processName,
+		tableName,
+		processName,
+		"%s",
+		"%s",
+		processName,
+		"`",
+		"%d",
+		"%s",
+		"%s",
+		"%s",
+		"%s",
+		"%s",
+		"`",
+		"%s",
+		"%s",
 	)
 
 	err = os.WriteFile(filePathHandler, []byte(handlerCode), 0o644)
@@ -1423,9 +1547,10 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", app.getById%sHandler)
 					r.Delete("/", app.cancel%sHandler)
+					r.Get("/history", app.getHistoryById%sHandler)
 				})
 			})	
-`, tableName, processName, processName, processName)
+`, tableName, processName, processName, processName, processName)
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`

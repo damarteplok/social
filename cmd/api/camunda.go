@@ -22,6 +22,7 @@ const (
 	ResourceUrl        = "/v2/resources"
 	ProcessInstanceUrl = "/v2/process-instances"
 	V1TasklistUrl      = "/v1/tasks"
+	V1FlowNodeUrl      = "/v1/flownode-instances"
 )
 
 // Deploy godoc
