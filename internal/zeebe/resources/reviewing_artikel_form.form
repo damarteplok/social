@@ -1,34 +1,45 @@
 {
   "components": [
     {
-      "action": "submit",
-      "label": "approve",
-      "type": "button",
+      "label": "note",
+      "type": "textarea",
       "layout": {
-        "row": "Row_1y1cf24",
+        "row": "Row_1yx8vnu",
         "columns": null
       },
-      "id": "Field_12evc3j",
+      "id": "Field_0t29usz",
+      "key": "note",
+      "description": "note"
+    },
+    {
+      "action": "submit",
+      "label": "ok",
+      "type": "button",
+      "layout": {
+        "row": "Row_0fs5dhq",
+        "columns": null
+      },
+      "id": "Field_1281cj4",
       "properties": {
-        "decision": "approve"
+        "decision": "lolos"
       }
     },
     {
       "action": "submit",
-      "label": "revisi",
+      "label": "not ok",
       "type": "button",
       "layout": {
-        "row": "Row_1y1cf24",
+        "row": "Row_0fs5dhq",
         "columns": null
       },
-      "id": "Field_0eotlgf",
+      "id": "Field_1meo1xr",
       "properties": {
-        "decision": "revisi"
+        "decision": "perbaikan"
       }
     }
   ],
   "type": "default",
-  "id": "review_bikin_something",
+  "id": "reviewing_artikel_form",
   "executionPlatform": "Camunda Cloud",
   "executionPlatformVersion": "8.5.0",
   "exporter": {

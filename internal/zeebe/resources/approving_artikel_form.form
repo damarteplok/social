@@ -2,33 +2,33 @@
   "components": [
     {
       "action": "submit",
-      "label": "terima",
+      "label": "publish",
       "type": "button",
       "layout": {
-        "row": "Row_16piegp",
+        "row": "Row_1yvs93v",
         "columns": null
       },
-      "id": "Field_0vam6zh",
+      "id": "Field_1ibvgcj",
       "properties": {
-        "decision": "terima"
+        "decision": "publish"
       }
     },
     {
       "action": "submit",
-      "label": "tolak",
+      "label": "archive",
       "type": "button",
       "layout": {
-        "row": "Row_16piegp",
+        "row": "Row_1yvs93v",
         "columns": null
       },
-      "id": "Field_0hvv89t",
+      "id": "Field_0kajl7g",
       "properties": {
-        "decision": "tolak"
+        "decision": "archive"
       }
     }
   ],
   "type": "default",
-  "id": "setujui_form_id",
+  "id": "approving_artikel_form",
   "executionPlatform": "Camunda Cloud",
   "executionPlatformVersion": "8.5.0",
   "exporter": {

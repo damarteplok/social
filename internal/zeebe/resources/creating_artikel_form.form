@@ -1,0 +1,102 @@
+{
+  "components": [
+    {
+      "label": "judul",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_14tcjrv",
+        "columns": null
+      },
+      "id": "Field_0y3os3v",
+      "key": "title",
+      "description": "judul artikel",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "isi artikel",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_01qi09h",
+        "columns": null
+      },
+      "id": "Field_0f6at9y",
+      "key": "content",
+      "description": "isi artikel"
+    },
+    {
+      "label": "version",
+      "type": "number",
+      "layout": {
+        "row": "Row_1tvnkid",
+        "columns": null
+      },
+      "id": "Field_1v3k09j",
+      "key": "version",
+      "description": "version artikel",
+      "increment": "1",
+      "disabled": true,
+      "validate": {
+        "required": true
+      },
+      "defaultValue": 1
+    },
+    {
+      "values": [
+        {
+          "label": "Value",
+          "value": "value"
+        }
+      ],
+      "label": "tags",
+      "type": "select",
+      "layout": {
+        "row": "Row_05tnzpr",
+        "columns": null
+      },
+      "id": "Field_016ez9j",
+      "key": "tags",
+      "description": "tags",
+      "defaultValue": "<none>",
+      "searchable": false,
+      "disabled": false,
+      "readonly": false
+    },
+    {
+      "action": "submit",
+      "label": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_1lj54h2",
+        "columns": null
+      },
+      "id": "Field_1yrml3o",
+      "properties": {
+        "decision": "submit"
+      }
+    },
+    {
+      "action": "submit",
+      "label": "Draft",
+      "type": "button",
+      "layout": {
+        "row": "Row_1lj54h2",
+        "columns": null
+      },
+      "id": "Field_1x5d77k",
+      "properties": {
+        "decision": "draft"
+      }
+    }
+  ],
+  "type": "default",
+  "id": "creating_artikel_form",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.5.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.25.0"
+  },
+  "schemaVersion": 16
+}
