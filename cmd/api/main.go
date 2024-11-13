@@ -128,11 +128,19 @@ func main() {
 	}
 
 	// Rate Limiter
-	rateLimiter := ratelimiter.NewFixedWindowLimiter(
-		cfg.rateLimiter.RequestPerTimeFrame,
-		cfg.rateLimiter.TimeFrame,
-	)
-
+	var rateLimiter ratelimiter.Limiter
+	if cfg.redisCfg.enabled {
+		rateLimiter = ratelimiter.NewFixedWindowLimiterJWT(
+			rdb,
+			cfg.rateLimiter.RequestPerTimeFrame,
+			cfg.rateLimiter.TimeFrame,
+		)
+	} else {
+		rateLimiter = ratelimiter.NewFixedWindowLimiter(
+			cfg.rateLimiter.RequestPerTimeFrame,
+			cfg.rateLimiter.TimeFrame,
+		)
+	}
 	// Mailer
 	mailer := mailer.NewSendgrid(cfg.mail.sendgrid.apiKey, cfg.mail.fromEmail)
 

@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -21,7 +22,12 @@ func NewFixedWindowLimiter(limit int, window time.Duration) *FixedWindowRateLimi
 	}
 }
 
-func (rl *FixedWindowRateLimiter) Allow(ip string) (bool, time.Duration) {
+func (rl *FixedWindowRateLimiter) Allow(key interface{}) (bool, time.Duration, error) {
+	ip, ok := key.(string)
+	if !ok {
+		return false, 0, fmt.Errorf("invalid key type")
+	}
+
 	rl.RLock()
 	count, exists := rl.clients[ip]
 	rl.RUnlock()
@@ -34,9 +40,10 @@ func (rl *FixedWindowRateLimiter) Allow(ip string) (bool, time.Duration) {
 		}
 
 		rl.clients[ip]++
-		return true, 0
+		return true, 0, nil
 	}
-	return false, rl.window
+
+	return false, rl.window, nil
 }
 
 func (rl *FixedWindowRateLimiter) resetCount(ip string) {

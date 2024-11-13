@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/damarteplok/social/internal/store"
 	"github.com/golang-jwt/jwt/v5"
@@ -150,7 +151,28 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.rateLimiter.Enabled {
-			if allow, retryAfter := app.rateLimiter.Allow(r.RemoteAddr); !allow {
+			var allow bool
+			var retryAfter time.Duration
+			var err error
+			var key interface{}
+
+			if app.config.redisCfg.enabled {
+				token := r.Header.Get("Authorization")
+				key = token
+				if token == "" {
+					key = r.RemoteAddr
+				}
+			} else {
+				key = r.RemoteAddr
+			}
+
+			allow, retryAfter, err = app.rateLimiter.Allow(key)
+			if err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+
+			if !allow {
 				app.rateLimitExceededResponse(w, r, retryAfter.String())
 				return
 			}
