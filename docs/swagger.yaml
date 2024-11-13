@@ -1,12 +1,5 @@
 basePath: /v1
 definitions:
-  main.CreateKantorNgetesIdPayload:
-    properties:
-      variables:
-        additionalProperties:
-          type: string
-        type: object
-    type: object
   main.CreatePostPayload:
     properties:
       content:
@@ -97,11 +90,6 @@ definitions:
     - process_name
     - resource_name
     - version
-    type: object
-  main.DataStoreKantorNgetesIdWrapper:
-    properties:
-      data:
-        $ref: '#/definitions/store.KantorNgetesId'
     type: object
   main.DataStorePostWrapper:
     properties:
@@ -334,33 +322,6 @@ definitions:
       user_id:
         type: integer
     type: object
-  store.KantorNgetesId:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: integer
-      deleted_at:
-        type: string
-      id:
-        type: integer
-      process_definition_key:
-        type: integer
-      process_instance_key:
-        type: integer
-      resource_name:
-        type: string
-      task_definition_id:
-        type: string
-      task_state:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: integer
-      version:
-        type: integer
-    type: object
   store.Post:
     properties:
       comments:
@@ -490,96 +451,6 @@ paths:
       summary: Register a user
       tags:
       - authentication
-  /bpmn/kantor_ngetes_id:
-    post:
-      consumes:
-      - application/json
-      description: Create KantorNgetesId
-      parameters:
-      - description: KantorNgetesId Payload
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/main.CreateKantorNgetesIdPayload'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: KantorNgetesId Created
-          schema:
-            $ref: '#/definitions/main.DataStoreKantorNgetesIdWrapper'
-        "400":
-          description: Bad Request
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Create KantorNgetesId
-      tags:
-      - bpmn/KantorNgetesId
-  /bpmn/kantor_ngetes_id/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Cancel KantorNgetesId
-      parameters:
-      - description: ProcessInstanceKey
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: KantorNgetesId Canceled
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      security:
-      - ApiKeyAuth: []
-      summary: Cancel KantorNgetesId
-      tags:
-      - bpmn/KantorNgetesId
-    get:
-      consumes:
-      - application/json
-      description: GetById KantorNgetesId
-      parameters:
-      - description: ID from table
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: KantorNgetesId GetById
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema: {}
-        "404":
-          description: Not Found
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      security:
-      - ApiKeyAuth: []
-      summary: GetById KantorNgetesId
-      tags:
-      - bpmn/KantorNgetesId
   /camunda/incident/{incidentKey}/resolve:
     post:
       consumes:

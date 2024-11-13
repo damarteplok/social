@@ -108,145 +108,6 @@
                 }
             }
         },
-        "/bpmn/kantor_ngetes_id": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "Create KantorNgetesId",
-                "parameters": [
-                    {
-                        "description": "KantorNgetesId Payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.CreateKantorNgetesIdPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "KantorNgetesId Created",
-                        "schema": {
-                            "$ref": "#/definitions/main.DataStoreKantorNgetesIdWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
-        "/bpmn/kantor_ngetes_id/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "GetById KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "GetById KantorNgetesId",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID from table",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "KantorNgetesId GetById",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Cancel KantorNgetesId",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bpmn/KantorNgetesId"
-                ],
-                "summary": "Cancel KantorNgetesId",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ProcessInstanceKey",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "KantorNgetesId Canceled",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {}
-                    }
-                }
-            }
-        },
         "/camunda/incident/{incidentKey}/resolve": {
             "post": {
                 "security": [
@@ -1089,17 +950,6 @@
         }
     },
     "definitions": {
-        "main.CreateKantorNgetesIdPayload": {
-            "type": "object",
-            "properties": {
-                "variables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "main.CreatePostPayload": {
             "type": "object",
             "required": [
@@ -1230,14 +1080,6 @@
                 },
                 "version": {
                     "type": "integer"
-                }
-            }
-        },
-        "main.DataStoreKantorNgetesIdWrapper": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/store.KantorNgetesId"
                 }
             }
         },
@@ -1587,47 +1429,6 @@
                     "$ref": "#/definitions/store.User"
                 },
                 "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "store.KantorNgetesId": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "integer"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "process_definition_key": {
-                    "type": "integer"
-                },
-                "process_instance_key": {
-                    "type": "integer"
-                },
-                "resource_name": {
-                    "type": "string"
-                },
-                "task_definition_id": {
-                    "type": "string"
-                },
-                "task_state": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "type": "integer"
-                },
-                "version": {
                     "type": "integer"
                 }
             }
