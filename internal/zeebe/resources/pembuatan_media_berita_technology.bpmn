@@ -83,7 +83,9 @@
       <bpmn:outgoing>Flow_1kucw96</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_0gi4s4z" sourceRef="approving_artikel" targetRef="Gateway_0cbsxkt" />
-    <bpmn:sequenceFlow id="Flow_04b5vl9" sourceRef="Gateway_0cbsxkt" targetRef="archived" />
+    <bpmn:sequenceFlow id="Flow_04b5vl9" sourceRef="Gateway_0cbsxkt" targetRef="archived">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=decision="archive"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1kucw96" name="publish" sourceRef="Gateway_0cbsxkt" targetRef="published">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=decision="publish"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
