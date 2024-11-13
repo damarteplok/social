@@ -63,7 +63,7 @@ type ExtensionElement struct {
 	AssignmentDefinitions []AssignmentDefinition `xml:"assignmentDefinition"`
 	TaskSchedules         []TaskSchedule         `xml:"taskSchedule"`
 	TaskDefinitions       []TaskDefinition       `xml:"taskDefinition"`
-	properties            []Propertie            `xml:"properties"`
+	Properties            []Propertie            `xml:"properties"`
 }
 
 type UserTask struct {
