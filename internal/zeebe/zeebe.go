@@ -229,6 +229,7 @@ func generateCrudUserTask(userTask UserTask) error {
 	scriptCode := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 	id BIGSERIAL PRIMARY KEY,
 	name VARCHAR(256) NOT NULL,
+	task_id VARCHAR(256),
 	form_id VARCHAR(256),
 	properties JSONB,
 	created_by BIGINT NOT NULL,
@@ -274,6 +275,7 @@ const (
 type %s struct {
     ID         int64    `+"`json:\"id\"`"+`
 	Name       string   `+"`json:\"name\"`"+`
+	TaskId     string   `+"`json:\"task_id\"`"+`
 	FormId     string   `+"`json:\"form_id\"`"+`
 	Properties []string `+"`json:\"properties\"`"+`
 	CreatedBy  int64    `+"`json:\"created_by\"`"+`
@@ -325,14 +327,15 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 	}
 
 	query := %s
-		INSERT INTO %s (name, form_id, properties, created_by)
+		INSERT INTO %s (name, form_id, properties, created_by, task_id)
 		VALUES (
 			$1,
 			$2,
 			$3,
-			$4
+			$4,
+			$5
 		) RETURNING 
-		 	id, name, form_id, properties, created_by, updated_by,
+		 	id, name, form_id, task_id, properties, created_by, updated_by,
 			created_at, updated_at
 		%s
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -346,11 +349,12 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 		model.FormId,
 		propertiesJSON,
 		model.CreatedBy,
-		model.UpdatedAt,
+		model.TaskId,
 	).Scan(
 		&model.ID,
 		&model.Name,
 		&model.FormId,
+		&model.TaskId,
 		&propertiesData,
 		&model.CreatedBy,
 		&model.UpdatedBy,
@@ -366,7 +370,7 @@ func (s *%sStore) create(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
-		SELECT id, name, form_id, properties, created_by, 
+		SELECT id, name, form_id, task_id, properties, created_by, 
 		updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
@@ -381,6 +385,7 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 		&model.ID,
 		&model.Name,
 		&model.FormId,
+		&model.TaskId,
 		&propertiesData,
 		&model.CreatedBy,
 		&model.UpdatedBy,
@@ -442,9 +447,9 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	}
 	query := %s
 		UPDATE %s
-		SET name = $1, form_id = $2, properties = $3, updated_by = $4  updated_at = NOW()
-		WHERE id = $5 AND deleted_at IS NULL
-		RETURNING id, name, form_id, properties, created_by, updated_by, created_at, updated_at;
+		SET name = $1, form_id = $2, properties = $3, updated_by = $4, task_id = $5,  updated_at = NOW()
+		WHERE id = $6 AND deleted_at IS NULL
+		RETURNING id, name, form_id, task_id, properties, created_by, updated_by, created_at, updated_at;
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -458,10 +463,12 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		model.FormId,
 		propertiesJSON,
 		model.UpdatedBy,
+		model.TaskId,
 		model.ID,
 	).Scan(&model.ID, 
 		&model.Name, 
 		&model.FormId, 
+		&model.TaskId,
 		propertiesData, 
 		&model.CreatedBy, 
 		&model.UpdatedBy, 
@@ -537,7 +544,7 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	// if formID is not empty then generate code form
 	structCode := ""
 	if formID != "" {
-		formFile := idServiceTask + ".form"
+		formFile := formID + ".form"
 		filePathForm := fmt.Sprintf("./internal/zeebe/resources/%s", formFile)
 
 		form, errForm := readFormFile(filePathForm)
@@ -550,10 +557,147 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 
 	// create handler usertask
 	handlerUserTaskCode := fmt.Sprintf(`package main
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"%s/internal/store"
+)
 
 %s
+
+// GetUserTaskActive %s godoc
+//
+//	@Summary		GetUserTaskActive %s
+//	@Description	GetUserTaskActive %s
+//	@Tags			bpmn/%s
+//	@Accept			json
+//	@produce		json
+//	@Param			size			query		string	false	"Size 50"
+//	@Param			order			query		string	false	"Order DESC ASC"
+//	@Param			sort			query		string	false	"Sort creationTime"
+//
+// @Param			state			query		string	false	"State CREATED"
+//
+//	@Param			searchAfter		query		string	false	"SearchAfter 1731486859777,2251799814109407"
+//	@Param			searchBefore	query		string	false	"SearchBefore 1731486859777,2251799814109407"
+//	@Success		200				{string}	string	"%s GetUserTaskActive"
+//	@Failure		400				{object}	error
+//	@Failure		404				{object}	error
+//	@Failure		500				{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/search  [get]
+func (app *application) getUserTaskActive%sHandler(w http.ResponseWriter, r *http.Request) {
+	taskListQueryParams, err := getTaskListQueryParams(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if taskListQueryParams.Sort == "" {
+		taskListQueryParams.Sort = "creationTime"
+	}
+
+	if taskListQueryParams.State == "" {
+		taskListQueryParams.State = "CREATED"
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	jsonTemplate := %s
+{
+	"taskDefinitionId": "%s",
+	"state:": "%s",
+    "pageSize": %s, 
+    "sort": [{"field": "%s", "order": "%s"}]
+    %s
+}%s
+
+	var searchAfterStr, searchBeforeStr string
+
+	if taskListQueryParams.SearchAfter != "" {
+		searchAfterStr = fmt.Sprintf(%s, "searchAfter": %s%s, taskListQueryParams.SearchAfter)
+	}
+
+	if taskListQueryParams.SearchBefore != "" {
+		searchBeforeStr = fmt.Sprintf(%s, "searchBefore": %s%s, taskListQueryParams.SearchBefore)
+	}
+
+	searchParams := searchAfterStr + searchBeforeStr
+
+	body := []byte(fmt.Sprintf(
+		jsonTemplate,
+		store.%sID,
+		taskListQueryParams.State,
+		taskListQueryParams.Size,
+		taskListQueryParams.Sort,
+		taskListQueryParams.Order,
+		searchParams))
+
+	// get history from operate api rest api
+	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaTasklistBaseUrl, V1TasklistUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
 	
-`, structCode)
+`,
+		moduleName,
+		structCode,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		userTaskName,
+		nameFile,
+		userTaskName,
+
+		"`",
+		"%s",
+		"%s",
+		"%d",
+		"%s",
+		"%s",
+		"%s",
+		"`",
+
+		"`",
+		"%s",
+		"`",
+
+		"`",
+		"%s",
+		"`",
+
+		userTaskName,
+
+		"%s",
+		"%s",
+	)
 
 	err = os.WriteFile(filePathHandler, []byte(handlerUserTaskCode), 0o644)
 	if err != nil {
@@ -563,9 +707,9 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	filePathEditRoutes := "./cmd/api/api.go"
 	generateCodeRoutes := fmt.Sprintf(`
 			r.Route("/%s", func(r chi.Router) {
-			
+				r.Get("/search", app.getUserTaskActive%sHandler)
 			})	
-`, nameFile)
+`, nameFile, userTaskName)
 
 	err = insertGeneratedCode(filePathEditRoutes, generateCodeRoutes, "// GENERATE USER TASK ROUTES API")
 	if err != nil {
@@ -866,6 +1010,7 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 	query := %s
 		SELECT id, process_definition_key, version, 
 			resource_name, process_instance_key, 
+			task_definition_id, task_state,
 			created_by, updated_by, created_at, updated_at
 		FROM %s
 		WHERE id = $1 AND deleted_at IS NULL
@@ -881,6 +1026,8 @@ func (s *%sStore) GetByID(ctx context.Context, id int64) (*%s, error) {
 		&model.Version,
 		&model.ResourceName,
 		&model.ProcessInstanceKey,
+		&model.TaskDefinitionId,
+		&model.TaskState,
 		&model.CreatedBy,
 		&model.UpdatedBy,
 		&model.CreatedAt,
@@ -1239,12 +1386,16 @@ func (app *application) get%s(ctx context.Context, modelID int64) (*store.%s, er
 //	@Tags			bpmn/%s
 //	@Accept			json
 //	@produce		json
-//	@Param			id	path		int		true	"ID from table"
-//	@Param			size	query		string	false	"Size"
-//	@Param			order	query		string	false	"Order"
-//	@Param			sort	query		string	false	"Sort"
-//	@Param			searchAfter	query	string	false	"SearchAfter"
-//	@Param 			searchBefore query 	string false "SearchBefore"
+//	@Param			id				path		int		true	"ID from table"
+//	@Param			size			query		string	false	"Size 50"
+//	@Param			order			query		string	false	"Order DESC ASC"
+//
+// @Param			type			query		string	false	"Type USER_TASK"
+// @Param			state			query		string	false	"State ACTIVE"
+//
+//	@Param			sort			query		string	false	"Sort startDate"
+//	@Param			searchAfter		query		string	false	"SearchAfter 1731486859777,2251799814109407"
+//	@Param			searchBefore	query		string	false	"SearchBefore 1731486859777,2251799814109407"
 //	@Success		200	{string}	string	"%s GetHistoryById"
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error
@@ -1258,33 +1409,10 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	size := r.URL.Query().Get("size")
-	if size == "" {
-		size = "50"
-	}
-
-	order := r.URL.Query().Get("order")
-	if order == "" {
-		order = "desc"
-	}
-
-	sort := r.URL.Query().Get("sort")
-	if sort == "" {
-		sort = "creationTime"
-	}
-
-	searchAfter := r.URL.Query().Get("searchAfter")
-	if searchAfter == "" {
-		searchAfter = "[]"
-	} else {
-		searchAfter = fmt.Sprintf("[%s]", searchAfter)
-	}
-
-	searchBefore := r.URL.Query().Get("searchBefore")
-	if searchBefore == "" {
-		searchBefore = "[]"
-	} else {
-		searchBefore = fmt.Sprintf("[%s]", searchBefore)
+	flowNodeQueryParams, err := getFlowNodeQueryParams(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
 	}
 
 	ctx := r.Context()
@@ -1297,17 +1425,37 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		app.handleRequestError(w, r, err)
 		return
 	}
+	
+	jsonTemplate := %s
+{
+    "filter": {
+        "processInstanceKey": %s
+    }, 
+    "size": %s, 
+    "sort": [{"field": "%s", "order": "%s"}]
+    %s
+}%s
 
-	body := []byte(fmt.Sprintf(%s
-	{
-		"filter": {
-			"processInstanceKey": %s
-		}, 
-		"size": %s, 
-		"sort": [{"field": "%s", "order": "%s"}], 
-		"searchAfter": %s,
-		"searchBefore": %s
-	}%s, model.ProcessInstanceKey, size, sort, order, searchAfter, searchBefore))
+	var searchAfterStr, searchBeforeStr string
+
+	if flowNodeQueryParams.SearchAfter != "" {
+		searchAfterStr = fmt.Sprintf(%s, "searchAfter": %s%s, flowNodeQueryParams.SearchAfter)
+	}
+
+	if flowNodeQueryParams.SearchBefore != "" {
+		searchBeforeStr = fmt.Sprintf(%s, "searchBefore": %s%s, flowNodeQueryParams.SearchBefore)
+	}
+
+	searchParams := searchAfterStr + searchBeforeStr
+
+	body := []byte(fmt.Sprintf(
+		jsonTemplate,
+		model.ProcessInstanceKey,
+		flowNodeQueryParams.Size,
+		flowNodeQueryParams.Sort,
+		flowNodeQueryParams.Order,
+		searchParams,
+	))
 
 	// get history from operate api rest api
 	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaOperateBaseUrl, V1FlowNodeUrl)
@@ -1352,7 +1500,7 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		processName,
 		processName,
 		processName,
-		tableName,
+		strings.ReplaceAll(tableName, " ", "_"),
 		processName,
 		processName,
 		// cancel
@@ -1363,9 +1511,9 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		processName,
 		processName,
 		processName,
-		tableName,
 		processName,
 		processName,
+		strings.ReplaceAll(tableName, " ", "_"),
 		processName,
 		processName,
 		processName,
@@ -1374,9 +1522,9 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		processName,
 		processName,
 		processName,
-		tableName,
 		processName,
 		processName,
+		strings.ReplaceAll(tableName, " ", "_"),
 		processName,
 		processName,
 		// get
@@ -1393,19 +1541,27 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		processName,
 		processName,
 		processName,
-		tableName,
+		strings.ReplaceAll(tableName, " ", "_"),
 		processName,
-		"%s",
-		"%s",
+
 		processName,
+
 		"`",
 		"%d",
 		"%s",
 		"%s",
 		"%s",
 		"%s",
+		"`",
+
+		"`",
 		"%s",
 		"`",
+
+		"`",
+		"%s",
+		"`",
+
 		"%s",
 		"%s",
 	)
@@ -1519,7 +1675,7 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 					r.Get("/history", app.getHistoryById%sHandler)
 				})
 			})	
-`, tableName, processName, processName, processName, processName)
+`, strings.ReplaceAll(tableName, " ", "_"), processName, processName, processName, processName)
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`

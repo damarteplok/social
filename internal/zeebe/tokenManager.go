@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -90,19 +90,20 @@ func (t *TokenManager) loginFromApp() error {
 }
 
 func (t *TokenManager) GetAuthToken(ctx context.Context) (string, error) {
-	log.Println("Getting auth token")
-	log.Println("Token: ", t.authToken)
 	if t.authToken != "" {
 		if t.isTokenExpired() {
 			err := t.refreshTokenFunc()
 			if err != nil {
-				return "", err
+				errLoginApp := t.loginFromApp()
+				if errLoginApp != nil {
+					return "", fmt.Errorf("failed to login from app token")
+				}
 			}
 		}
 	} else {
 		err := t.loginFromApp()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to login from app token")
 		}
 	}
 	return t.authToken, nil

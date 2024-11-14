@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -319,8 +318,6 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	log.Println(string(body))
-
 	ctx := r.Context()
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
@@ -521,16 +518,5 @@ func (app *application) setDefaultSort(payload *SearchTaskListPayload) {
 func (app *application) setDefaultState(payload *SearchTaskListPayload) {
 	if payload.State == "" {
 		payload.State = "CREATED"
-	}
-}
-
-func (app *application) handleRequestError(w http.ResponseWriter, r *http.Request, err error) {
-	switch err {
-	case store.ErrNotFound:
-		app.notFoundResponse(w, r, err)
-	case store.ErrMethodNotAllowed:
-		app.methodNotAllowedResponse(w, r, err)
-	default:
-		app.internalServerError(w, r, err)
 	}
 }

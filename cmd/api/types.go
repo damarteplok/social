@@ -264,3 +264,24 @@ type UserWithToken struct {
 	*store.User
 	Token string `json:"token"`
 }
+
+type FlowNodeQueryParams struct {
+	Size         string
+	Order        string
+	Sort         string
+	SearchAfter  string
+	SearchBefore string
+	Type         string
+	State        string
+}
+
+type TaskListQueryParams struct {
+	Size               int32
+	State              string
+	TaskDefinitionId   string
+	ProcessInstanceKey string
+	Sort               string
+	Order              string
+	SearchAfter        string
+	SearchBefore       string
+}

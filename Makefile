@@ -4,9 +4,9 @@ autocannon: R ?= 4000
 autocannon: D ?= 2
 autocannon: C ?= 10
 
-.PHONY: run-air
+.PHONY: run
 run:
-	@air
+	@go run ./cmd/api
 
 .PHONY: test
 test:

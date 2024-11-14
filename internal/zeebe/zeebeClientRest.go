@@ -58,6 +58,10 @@ func (z *ZeebeClientRest) SendRequest(ctx context.Context, method, endpoint stri
 		return nil, store.ErrNotFound
 	}
 
+	if resp.StatusCode == http.StatusBadRequest {
+		return nil, store.ErrBadRequest
+	}
+
 	if resp.StatusCode == http.StatusMethodNotAllowed {
 		return nil, store.ErrMethodNotAllowed
 	}
