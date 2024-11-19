@@ -154,7 +154,30 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		app.internalServerError(w, r, err)
 		return
 	}
-	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, map[string]interface{}{
+		"token": token,
+		"user":  user,
+	}); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// getTokenUserHandler godoc
+//
+//	@Summary		Get user from token
+//	@Description	Get user from token
+//	@Tags			authentication
+//	@Accept			json
+//	@produce		json
+//	@Success		200	{object}	DataStoreUserWrapper	"User"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Router			/authentication/user [get]
+//	@Security		ApiKeyAuth
+func (app *application) getTokenUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := GetUserFromContext(r)
+	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

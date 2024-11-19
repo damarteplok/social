@@ -99,7 +99,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/follow  [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser := getUserFromContext(r)
+	followerUser := GetUserFromContext(r)
 	followedId, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
@@ -139,7 +139,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow  [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser := getUserFromContext(r)
+	followerUser := GetUserFromContext(r)
 
 	unfollowedId, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
@@ -158,9 +158,4 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, err)
 		return
 	}
-}
-
-func getUserFromContext(r *http.Request) *store.User {
-	user, _ := r.Context().Value(userCtx).(*store.User)
-	return user
 }

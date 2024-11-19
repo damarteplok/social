@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  main.CreatePembuatanMediaBeritaTechnologyPayload:
+    properties:
+      variables:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   main.CreatePostPayload:
     properties:
       content:
@@ -90,6 +97,15 @@ definitions:
     - process_name
     - resource_name
     - version
+    type: object
+  main.DataStorePembuatanMediaBeritaTechnologyWrapper:
+    properties:
+      data:
+        $ref: '#/definitions/store.PembuatanMediaBeritaTechnology'
+      message:
+        type: string
+      status:
+        type: integer
     type: object
   main.DataStorePostWrapper:
     properties:
@@ -272,6 +288,13 @@ definitions:
       elementId:
         type: string
     type: object
+  main.UpdatePembuatanMediaBeritaTechnologyPayload:
+    properties:
+      variables:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   main.UpdatePostPayload:
     properties:
       content:
@@ -320,6 +343,33 @@ definitions:
       user:
         $ref: '#/definitions/store.User'
       user_id:
+        type: integer
+    type: object
+  store.PembuatanMediaBeritaTechnology:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      deleted_at:
+        type: string
+      id:
+        type: integer
+      process_definition_key:
+        type: integer
+      process_instance_key:
+        type: integer
+      resource_name:
+        type: string
+      task_definition_id:
+        type: string
+      task_state:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+      version:
         type: integer
     type: object
   store.Post:
@@ -421,6 +471,31 @@ paths:
       tags:
       - authentication
   /authentication/user:
+    get:
+      consumes:
+      - application/json
+      description: Get user from token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User
+          schema:
+            $ref: '#/definitions/main.DataStoreUserWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get user from token
+      tags:
+      - authentication
     post:
       consumes:
       - application/json
@@ -451,6 +526,353 @@ paths:
       summary: Register a user
       tags:
       - authentication
+  /bpmn/pembuatan_media_berita_technology:
+    get:
+      consumes:
+      - application/json
+      description: Search PembuatanMediaBeritaTechnology
+      parameters:
+      - description: Limit 20
+        in: query
+        name: limit
+        required: true
+        type: string
+      - description: Page 1
+        in: query
+        name: page
+        required: true
+        type: string
+      - description: Search string
+        in: query
+        name: search
+        type: string
+      - description: Sort desc
+        in: query
+        name: sort
+        type: string
+      - description: Since desc
+        in: query
+        name: since
+        type: string
+      - description: Until desc
+        in: query
+        name: until
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology Search
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Search PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+    post:
+      consumes:
+      - application/json
+      description: Create PembuatanMediaBeritaTechnology
+      parameters:
+      - description: PembuatanMediaBeritaTechnology Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreatePembuatanMediaBeritaTechnologyPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: PembuatanMediaBeritaTechnology Created
+          schema:
+            $ref: '#/definitions/main.DataStorePembuatanMediaBeritaTechnologyWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+  /bpmn/pembuatan_media_berita_technology/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancel PembuatanMediaBeritaTechnology
+      parameters:
+      - description: ProcessInstanceKey
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology Canceled
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+    get:
+      consumes:
+      - application/json
+      description: GetById PembuatanMediaBeritaTechnology
+      parameters:
+      - description: ID from table
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology GetById
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: GetById PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+    patch:
+      consumes:
+      - application/json
+      description: Update PembuatanMediaBeritaTechnology
+      parameters:
+      - description: ID from table
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: PembuatanMediaBeritaTechnology Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdatePembuatanMediaBeritaTechnologyPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology Updated
+          schema:
+            $ref: '#/definitions/main.DataStorePembuatanMediaBeritaTechnologyWrapper'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+  /bpmn/pembuatan_media_berita_technology/{id}/history:
+    get:
+      consumes:
+      - application/json
+      description: GetHistoryById PembuatanMediaBeritaTechnology
+      parameters:
+      - description: ID from table
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Size 50
+        in: query
+        name: size
+        type: string
+      - description: Order DESC ASC
+        in: query
+        name: order
+        type: string
+      - description: Type USER_TASK
+        in: query
+        name: type
+        type: string
+      - description: State ACTIVE
+        in: query
+        name: state
+        type: string
+      - description: Sort startDate
+        in: query
+        name: sort
+        type: string
+      - description: SearchAfter 1731486859777,2251799814109407
+        in: query
+        name: searchAfter
+        type: string
+      - description: SearchBefore 1731486859777,2251799814109407
+        in: query
+        name: searchBefore
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology GetHistoryById
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: GetHistoryById PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+  /bpmn/pembuatan_media_berita_technology/{id}/incidents:
+    get:
+      consumes:
+      - application/json
+      description: GetProcessIncidents PembuatanMediaBeritaTechnology
+      parameters:
+      - description: ID from table
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Size 50
+        in: query
+        name: size
+        type: string
+      - description: Order DESC ASC
+        in: query
+        name: order
+        type: string
+      - description: Type USER_TASK
+        in: query
+        name: type
+        type: string
+      - description: State ACTIVE
+        in: query
+        name: state
+        type: string
+      - description: Sort startDate
+        in: query
+        name: sort
+        type: string
+      - description: SearchAfter 1731486859777,2251799814109407
+        in: query
+        name: searchAfter
+        type: string
+      - description: SearchBefore 1731486859777,2251799814109407
+        in: query
+        name: searchBefore
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanMediaBeritaTechnology GetProcessIncidents
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: GetProcessIncidents PembuatanMediaBeritaTechnology
+      tags:
+      - bpmn/PembuatanMediaBeritaTechnology
+  /bpmn/pembuatanartikel/search:
+    get:
+      consumes:
+      - application/json
+      description: GetUserTaskActive PembuatanArtikel
+      parameters:
+      - description: Size 50
+        in: query
+        name: size
+        type: string
+      - description: Order DESC ASC
+        in: query
+        name: order
+        type: string
+      - description: Sort creationTime
+        in: query
+        name: sort
+        type: string
+      - description: State CREATED
+        in: query
+        name: state
+        type: string
+      - description: SearchAfter 1731486859777,2251799814109407
+        in: query
+        name: searchAfter
+        type: string
+      - description: SearchBefore 1731486859777,2251799814109407
+        in: query
+        name: searchBefore
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PembuatanArtikel GetUserTaskActive
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: GetUserTaskActive PembuatanArtikel
+      tags:
+      - bpmn/PembuatanArtikel
   /camunda/incident/{incidentKey}/resolve:
     post:
       consumes:
@@ -479,11 +901,46 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Resolve Incident Bpmn Camunda
       tags:
       - camunda/incident
   /camunda/process-instance:
+    get:
+      consumes:
+      - application/json
+      description: Get Proses Instance from rest api
+      parameters:
+      - description: Size 50
+        in: query
+        name: size
+        type: string
+      - description: SearchAfter 1731486859777,2251799814109407
+        in: query
+        name: searchAfter
+        type: string
+      - description: SearchBefore 1731486859777,2251799814109407
+        in: query
+        name: searchBefore
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: search process instance
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get Proses Instance from rest api
+      tags:
+      - camunda/process-instance
     post:
       consumes:
       - application/json
@@ -509,7 +966,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Create Proses Instance from rest api
       tags:
       - camunda/process-instance
@@ -538,7 +995,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Cancel Proses Instance from rest api
       tags:
       - camunda/process-instance
@@ -570,7 +1027,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Delete Bpmn Camunda
       tags:
       - camunda/resource
@@ -600,7 +1057,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: CRUD Store And Handler
       tags:
       - camunda/resource
@@ -630,7 +1087,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Deploy Only Bpmn Camunda
       tags:
       - camunda/resource
@@ -661,10 +1118,33 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Deploy Bpmn Camunda and Create CRUD in Store And Handler File
       tags:
       - camunda/resource
+  /camunda/resource/operate/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Get Information operate statistics camunda from rest api
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: search process instance
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get Information operate statistics camunda from rest api
+      tags:
+      - camunda/process-instance
   /camunda/user-task:
     post:
       consumes:
@@ -691,7 +1171,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Search TaskList from rest api v1
       tags:
       - camunda/user-task
@@ -722,7 +1202,7 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-      - BasicAuth: []
+      - ApiKeyAuth: []
       summary: Search User Task from rest api v2 must enabled in camunda-platform
         config first
       tags:

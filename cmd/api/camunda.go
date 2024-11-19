@@ -14,14 +14,16 @@ import (
 )
 
 const (
-	StateCreated       = "CREATED"
-	StateCompleted     = "COMPLETED"
-	StateCanceled      = "CANCELED"
-	StateFailed        = "FAILED"
-	ResourceUrl        = "/v2/resources"
-	ProcessInstanceUrl = "/v2/process-instances"
-	V1TasklistUrl      = "/v1/tasks"
-	V1FlowNodeUrl      = "/v1/flownode-instances"
+	StateCreated         = "CREATED"
+	StateCompleted       = "COMPLETED"
+	StateCanceled        = "CANCELED"
+	StateFailed          = "FAILED"
+	ResourceUrl          = "/v2/resources"
+	ProcessInstanceUrl   = "/v2/process-instances"
+	V1TasklistUrl        = "/v1/tasks"
+	V1FlowNodeUrl        = "/v1/flownode-instances"
+	V1ProcessInstanceUrl = "/v1/process-instances"
+	V1IncidentUrl        = "/v1/incidents"
 )
 
 // Deploy godoc
@@ -35,7 +37,7 @@ const (
 //	@Success		201		{string}	string
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/resource/deploy-crud  [post]
 func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload DeployBpmnPayload
@@ -94,7 +96,7 @@ func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Requ
 //	@Success		201		{string}	string
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/resource/deploy  [post]
 func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload DeployBpmnPayload
@@ -144,7 +146,7 @@ func (app *application) deployOnlyCamundaHandler(w http.ResponseWriter, r *http.
 //	@Success		201		{string}	string
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/resource/crud  [post]
 func (app *application) crudCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CrudPayload
@@ -185,7 +187,7 @@ func (app *application) crudCamundaHandler(w http.ResponseWriter, r *http.Reques
 //	@Success		200		{object}	CreateProcessInstancesResponse
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/process-instance  [post]
 func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Request) {
 	var payload CreateProcessInstancePayload
@@ -248,7 +250,7 @@ func (app *application) createProsesInstance(w http.ResponseWriter, r *http.Requ
 //	@Success		204					{string}	string
 //	@Failure		400					{object}	error
 //	@Failure		500					{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/process-instance/{processinstanceKey}/cancel  [post]
 func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Request) {
 	processInstanceKey, err := strconv.ParseInt(chi.URLParam(r, "processinstanceKey"), 10, 64)
@@ -295,7 +297,7 @@ func (app *application) cancelProcessInstance(w http.ResponseWriter, r *http.Req
 //	@Success		200		{object}	SearchTaskListPayload
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/user-task  [post]
 func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Request) {
 	var payload SearchTaskListPayload
@@ -362,7 +364,7 @@ func (app *application) searchTaskListHandler(w http.ResponseWriter, r *http.Req
 //
 //	@Failure		400						{object}	error
 //	@Failure		500						{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/resource/{processDefinitionKey}/delete  [delete]
 func (app *application) deleteCamundaHandler(w http.ResponseWriter, r *http.Request) {
 	processDefinitionKey, err := strconv.ParseInt(chi.URLParam(r, "processDefinitionKey"), 10, 64)
@@ -408,7 +410,7 @@ func (app *application) deleteCamundaHandler(w http.ResponseWriter, r *http.Requ
 //
 //	@Failure		400			{object}	error
 //	@Failure		500			{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/incident/{incidentKey}/resolve  [post]
 func (app *application) resolveIncidentHandler(w http.ResponseWriter, r *http.Request) {
 	incidentKey, err := strconv.ParseInt(chi.URLParam(r, "incidentKey"), 10, 64)
@@ -449,7 +451,7 @@ func (app *application) resolveIncidentHandler(w http.ResponseWriter, r *http.Re
 //	@Success		200		{object}	QueryUserTaskPayload
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
-//	@Security		BasicAuth
+//	@Security		ApiKeyAuth
 //	@Router			/camunda/user-task/search  [post]
 func (app *application) searchUserTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var payload QueryUserTaskPayload
@@ -492,6 +494,146 @@ func (app *application) searchUserTaskHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// GetProsesInstance godoc
+//
+//	@Summary		Get Proses Instance from rest api
+//	@Description	Get Proses Instance from rest api
+//	@Tags			camunda/process-instance
+//	@Accept			json
+//	@produce		json
+//	@Param			size			query		string	false	"Size 50"
+//	@Param			searchAfter		query		string	false	"SearchAfter 1731486859777,2251799814109407"
+//	@Param			searchBefore	query		string	false	"SearchBefore 1731486859777,2251799814109407"
+//	@Success		200				{string}	string	"search process instance"
+//	@Failure		400				{object}	error
+//	@Failure		500				{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/process-instance  [get]
+func (app *application) searchProcessInstance(w http.ResponseWriter, r *http.Request) {
+	flowNodeQueryParams, err := getFlowNodeQueryParams(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	jsonTemplate := `
+{
+    "size": %s
+    %s
+}`
+
+	var searchAfterStr, searchBeforeStr string
+
+	if flowNodeQueryParams.SearchAfter != "" {
+		searchAfterStr = fmt.Sprintf(`, "searchAfter": %s`, flowNodeQueryParams.SearchAfter)
+	}
+
+	if flowNodeQueryParams.SearchBefore != "" {
+		searchBeforeStr = fmt.Sprintf(`, "searchBefore": %s`, flowNodeQueryParams.SearchBefore)
+	}
+
+	searchParams := searchAfterStr + searchBeforeStr
+
+	body := []byte(fmt.Sprintf(
+		jsonTemplate,
+		flowNodeQueryParams.Size,
+		searchParams,
+	))
+
+	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaOperateBaseUrl, V1ProcessInstanceUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// GetOperateApi godoc
+//
+//	@Summary		Get Information operate statistics camunda from rest api
+//	@Description	Get Information operate statistics camunda from rest api
+//	@Tags			camunda/resource
+//	@Accept			json
+//	@produce		json
+//	@Success		200	{string}	string	"search process instance"
+//	@Failure		400	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/resource/operate/statistics  [get]
+func (app *application) operateStatisticsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	// get core statistics
+	url := fmt.Sprintf("%s/api/process-instances/core-statistics", app.config.camundaRest.camundaOperateBaseUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodGet,
+		url,
+		nil,
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var coreStats OperateCoreStats
+	if err := json.Unmarshal(resp, &coreStats); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// get process
+	urlProcess := fmt.Sprintf("%s/api/incidents/byProcess", app.config.camundaRest.camundaOperateBaseUrl)
+	respProcess, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodGet,
+		urlProcess,
+		nil,
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var processStats []OperateProcessStats
+	if err := json.Unmarshal(respProcess, &processStats); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, map[string]interface{}{
+		"stats":   coreStats,
+		"process": processStats,
+	}); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

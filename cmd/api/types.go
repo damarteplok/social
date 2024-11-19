@@ -285,3 +285,29 @@ type TaskListQueryParams struct {
 	SearchAfter        string
 	SearchBefore       string
 }
+
+type OperateCoreStats struct {
+	Running       int `json:"running"`
+	Active        int `json:"active"`
+	WithIncidents int `json:"withIncidents"`
+}
+
+type Process struct {
+	ProcessID                         string  `json:"processId"`
+	Version                           int     `json:"version"`
+	Name                              string  `json:"name"`
+	BpmnProcessID                     string  `json:"bpmnProcessId"`
+	TenantID                          string  `json:"tenantId"`
+	ErrorMessage                      *string `json:"errorMessage"`
+	InstancesWithActiveIncidentsCount int     `json:"instancesWithActiveIncidentsCount"`
+	ActiveInstancesCount              int     `json:"activeInstancesCount"`
+}
+
+type OperateProcessStats struct {
+	BpmnProcessID                     string    `json:"bpmnProcessId"`
+	TenantID                          string    `json:"tenantId"`
+	ProcessName                       *string   `json:"processName"`
+	InstancesWithActiveIncidentsCount int       `json:"instancesWithActiveIncidentsCount"`
+	ActiveInstancesCount              int       `json:"activeInstancesCount"`
+	Processes                         []Process `json:"processes"`
+}

@@ -10,6 +10,7 @@ import (
 var (
 	ErrMethodNotAllowed  = errors.New("method not allowed")
 	ErrNotFound          = errors.New("resource not found")
+	ErrBadRequest        = errors.New("bad request")
 	ErrConflict          = errors.New("resource already exist")
 	ErrDuplicateEmail    = errors.New("a user with that email already exist")
 	ErrDuplicateUsername = errors.New("a user with that username already exist")
@@ -46,6 +47,32 @@ type Storage struct {
 		GetByName(context.Context, string) (*Role, error)
 	}
 	// GENERATED CODE INTERFACE
+
+	PembuatanMediaBeritaTechnology interface {
+		Create(context.Context, *PembuatanMediaBeritaTechnology) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*PembuatanMediaBeritaTechnology, error)
+		Update(context.Context, *PembuatanMediaBeritaTechnology) error
+		Search(context.Context, PaginatedQuery) (map[string]interface{}, error)
+	}
+
+	ApprovingArtikel interface {
+		Create(context.Context, *ApprovingArtikel) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*ApprovingArtikel, error)
+	}
+
+	ReviewingArtikel interface {
+		Create(context.Context, *ReviewingArtikel) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*ReviewingArtikel, error)
+	}
+
+	PembuatanArtikel interface {
+		Create(context.Context, *PembuatanArtikel) error
+		Delete(context.Context, int64) error
+		GetByID(context.Context, int64) (*PembuatanArtikel, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -57,6 +84,13 @@ func NewStorage(db *sql.DB) Storage {
 		Roles:     &RoleStore{db},
 		// GENERATED CODE CONSTRUCTOR
 
+		PembuatanMediaBeritaTechnology: &PembuatanMediaBeritaTechnologyStore{db},
+
+		ApprovingArtikel: &ApprovingArtikelStore{db},
+
+		ReviewingArtikel: &ReviewingArtikelStore{db},
+
+		PembuatanArtikel: &PembuatanArtikelStore{db},
 	}
 }
 

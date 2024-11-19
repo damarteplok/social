@@ -43,6 +43,22 @@ func (c *Client) Close() error {
 	return c.client.Close()
 }
 
+// UpdateProcessInstance updates the variables of a process instance.
+func (c *Client) UpdateProcessInstance(ctx context.Context, processInstanceKey int64, variables map[string]interface{}) error {
+	request, err := c.client.NewSetVariablesCommand().ElementInstanceKey(processInstanceKey).VariablesFromMap(variables)
+	if err != nil {
+		return fmt.Errorf("failed to update process instance: %w", err)
+	}
+
+	_, err = request.Send(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update variables from process instance: %w", err)
+	}
+
+	return nil
+}
+
+// StartWorkflow starts a new workflow instance.
 func (c *Client) StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceResponse, error) {
 	request, err := c.client.NewCreateInstanceCommand().ProcessDefinitionKey(processDefinitionKey).VariablesFromMap(variables)
 	if err != nil {
@@ -57,6 +73,7 @@ func (c *Client) StartWorkflow(ctx context.Context, processDefinitionKey int64, 
 	return result, nil
 }
 
+// CancelWorkflow cancels a workflow instance.
 func (c *Client) CancelWorkflow(ctx context.Context, processInstanceKey int64) error {
 	_, err := c.client.NewCancelInstanceCommand().ProcessInstanceKey(processInstanceKey).Send(ctx)
 	if err != nil {
@@ -65,6 +82,7 @@ func (c *Client) CancelWorkflow(ctx context.Context, processInstanceKey int64) e
 	return nil
 }
 
+// DeployProcessDefinition deploys a process definition.
 func (z *Client) DeployProcessDefinition(resourceName string, formResources []string) ([]*pb.ProcessMetadata, []BPMNProcess, error) {
 	definition, err := MustReadFile(resourceName)
 	if err != nil {
@@ -109,6 +127,7 @@ func (z *Client) DeployProcessDefinition(resourceName string, formResources []st
 	return processes, bpmnProcess, nil
 }
 
+// StartWorker starts a worker for a given job type.
 func (z *Client) StartWorker(jobType, nameWorker string, handler worker.JobHandler) (worker.JobWorker, error) {
 	w := z.client.NewJobWorker().
 		JobType(jobType).
@@ -123,6 +142,7 @@ func (z *Client) StartWorker(jobType, nameWorker string, handler worker.JobHandl
 	return w, nil
 }
 
+// GenerateCRUDFromPayloadHandlers generates CRUD handlers from payload.
 func (c *Client) GenerateCRUDFromPayloadHandlers(processName, resourceName string, version int32, processDefinitionKey int64) error {
 	processNameTitle := toCamelCase(processName)
 	tableName := processName
@@ -133,6 +153,7 @@ func (c *Client) GenerateCRUDFromPayloadHandlers(processName, resourceName strin
 	return nil
 }
 
+// GenerateCRUDHandlers generates CRUD handlers from process metadata.
 func (c *Client) GenerateCRUDHandlers(processMetadata *pb.ProcessMetadata) error {
 	processName := toCamelCase(processMetadata.GetBpmnProcessId())
 	tableName := processMetadata.GetBpmnProcessId()
@@ -147,6 +168,7 @@ func (c *Client) GenerateCRUDHandlers(processMetadata *pb.ProcessMetadata) error
 	return nil
 }
 
+// GenerateCRUDUserTaskServiceTaskHandler generates CRUD handlers for user task and service task.
 func (c *Client) GenerateCRUDUserTaskServiceTaskHandler(bpmnProcess *[]BPMNProcess) error {
 	for _, process := range *bpmnProcess {
 		for _, serviceTask := range process.ServiceTask {
@@ -163,6 +185,7 @@ func (c *Client) GenerateCRUDUserTaskServiceTaskHandler(bpmnProcess *[]BPMNProce
 	return nil
 }
 
+// generate crud code for service task
 func generateCrudServiceTask(serviceTask ServiceTask) error {
 	idServiceTask := serviceTask.ID
 	nameServiceTask := serviceTask.Name
@@ -195,6 +218,7 @@ const (
 	return nil
 }
 
+// generate code crud for user task
 func generateCrudUserTask(userTask UserTask) error {
 	idServiceTask := userTask.ID
 	nameServiceTask := userTask.Name
@@ -1076,14 +1100,15 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 			process_instance_key = $4, 
 			updated_by = $5, 
 			updated_at = NOW()
-		WHERE id = $4 AND deleted_at IS NULL
+		WHERE id = $6 AND deleted_at IS NULL
 		RETURNING id, process_definition_key, 
 			version, 
 			resource_name, 
 			process_instance_key, 
 			created_by, 
 			updated_by, 
-			created_at updated_at;
+			created_at, 
+			updated_at
 	%s
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -1120,6 +1145,126 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 	return nil
 }
 
+func (s *%sStore) Search(ctx context.Context, pq PaginatedQuery) (map[string]interface{}, error) {
+	sortOrder := "DESC"
+	if pq.Sort == "desc" || pq.Sort == "DESC" {
+		sortOrder = "DESC"
+	}
+	if pq.Sort == "asc" || pq.Sort == "ASC" {
+		sortOrder = "ASC"
+	}
+
+	// Base Query
+	query := %s
+	 	SELECT p.id, p.process_definition_key, p.version,
+            p.resource_name, p.process_instance_key,
+            p.task_definition_id, p.task_state,
+            p.created_by, p.updated_by, p.created_at, p.updated_at
+        FROM pembuatan_media_berita_technology p
+        LEFT JOIN users u ON p.created_by = u.id
+        WHERE p.deleted_at IS NULL
+    %s
+
+	var params []interface{}
+	params = append(params, pq.Limit, pq.Offset)
+
+	if pq.Search != "" {
+		query += %s
+		AND (
+				p.process_definition_key::text ILIKE '%s' || $3 || '%s' OR 
+				p.resource_name ILIKE '%s' || $3 || '%s' OR
+				p.process_instance_key::text ILIKE '%s' || $3 || '%s' OR
+				p.task_definition_id::text ILIKE '%s' || $3 || '%s' OR
+				p.task_state ILIKE '%s' || $3 || '%s' OR
+				u.email ILIKE '%s' || $3 || '%s' OR
+				u.username ILIKE '%s' || $3 || '%s'
+			)
+		%s
+		params = append(params, pq.Search)
+	}
+
+	if pq.Since != "" && pq.Until != "" {
+		query += %s
+			AND p.created_at BETWEEN $4 AND $5
+        %s
+		params = append(params, pq.Since, pq.Until)
+	}
+
+	query += %s
+        ORDER BY p.created_at %s
+        LIMIT $1 OFFSET $2
+    %s
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	var results []*%s
+	rows, err := s.db.QueryContext(ctx, query, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item PembuatanMediaBeritaTechnology
+		if err := rows.Scan(
+			&item.ID,
+			&item.ProcessDefinitionKey,
+			&item.Version,
+			&item.ResourceName,
+			&item.ProcessInstanceKey,
+			&item.TaskDefinitionId,
+			&item.TaskState,
+			&item.CreatedBy,
+			&item.UpdatedBy,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		results = append(results, &item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	countQuery := %s
+		SELECT COUNT(*)
+        FROM %s p
+        LEFT JOIN users u ON p.created_by = u.id
+        WHERE p.deleted_at IS NULL
+    %s
+	var args []interface{}
+	if pq.Search != "" {
+		countQuery += %s
+			%s
+		%s
+		args = append(args, pq.Search)
+	}
+
+	var totalCount int
+	err = s.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := (totalCount + pq.Limit - 1) / pq.Limit
+
+	response := map[string]interface{}{
+		"content":      results,
+		"totalElement": totalCount,
+		"totalPages":   totalPages,
+		"limit":        pq.Limit,
+		"offset":       pq.Offset,
+		"sort":         pq.Sort,
+		"search":       pq.Search,
+		"since":        pq.Since,
+		"until":        pq.Until,
+	}
+
+	return response, nil
+}
 `,
 		processName,
 		version,
@@ -1159,6 +1304,24 @@ func (s *%sStore) update(ctx context.Context, tx *sql.Tx, model *%s) error {
 		"`",
 		tableName,
 		"`",
+
+		processName,
+		"`", "`", "`",
+		"%", "%", "%", "%", "%", "%", "%", "%", "%", "%", "%", "%", "%", "%",
+		"`", "`", "`", "`", "` + sortOrder + `", "`",
+		processName,
+		"`", tableName, "`", "`",
+		`
+		AND (
+                p.process_definition_key::text ILIKE '%' || $1 || '%' OR 
+                p.resource_name ILIKE '%' || $1 || '%' OR
+                p.process_instance_key::text ILIKE '%' || $1 || '%' OR
+                p.task_definition_id::text ILIKE '%' || $1 || '%' OR
+                p.task_state ILIKE '%' || $1 || '%' OR
+                u.email ILIKE '%' || $1 || '%' OR
+                u.username ILIKE '%' || $1 || '%'
+            )
+		`, "`",
 	)
 
 	err = os.WriteFile(filePathStore, []byte(modelCode), 0o644)
@@ -1189,6 +1352,8 @@ type Update%sPayload struct {
 }
 type DataStore%sWrapper struct {
 	Data store.%s `+"`json:\"data\"`"+`
+	Message string    	 `+"`json:\"message\"`"+`
+	Status  int          `+"`json:\"status\"`"+`
 }
 
 // TODO: U CAN ADD MORE HANDLER LIKE THIS EXAMPLE
@@ -1207,7 +1372,7 @@ type DataStore%sWrapper struct {
 //	@Security		ApiKeyAuth
 //	@Router			/bpmn/%s  [post]
 func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) {
-	user := getUserFromContext(r)
+	user := GetUserFromContext(r)
 	var payload Create%sPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
@@ -1224,7 +1389,11 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 	
 	ctx := r.Context()
 	variables := make(map[string]interface{})
-	variables["user"] = user
+	variables["created_by"] = map[string]interface{}{
+		"id":         user.ID,
+		"username":   user.Username,
+		"created_at": time.Now().Unix(),
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
@@ -1247,6 +1416,7 @@ func (app *application) create%sHandler(w http.ResponseWriter, r *http.Request) 
 		ProcessInstanceKey:   resp.GetProcessInstanceKey(),
 		ResourceName:         store.%sResourceName,
 		CreatedBy:            user.ID,
+		TaskState:            StringPtr("CREATED"),
 	}
 
 	if err := app.store.%s.Create(ctx, model); err != nil {
@@ -1415,6 +1585,10 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	if flowNodeQueryParams.Sort == "" {
+		flowNodeQueryParams.Sort = "startDate"
+	}
+
 	ctx := r.Context()
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
@@ -1481,89 +1655,281 @@ func (app *application) getHistoryById%sHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 }
-`,
-		moduleName,
-		processName,
-		"`",
-		"`",
-		processName,
-		"`",
-		"`",
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
 
-		processName,
-		processName,
-		processName,
-		processName,
-		strings.ReplaceAll(tableName, " ", "_"),
-		processName,
-		processName,
+// Search %s godoc
+//
+//	@Summary		Search %s
+//	@Description	Search %s
+//	@Tags			bpmn/%s
+//	@Accept			json
+//	@produce		json
+//	@Param			limit	query		string	true	"Limit 20"
+//	@Param			page	query		string	true	"Page 1"
+//	@Param			search	query		string	false	"Search string"
+//	@Param			sort	query		string	false	"Sort desc"
+//	@Param			since	query		string	false	"Since desc"
+//	@Param			until	query		string	false	"Until desc"
+//	@Success		200		{string}	string	"%s Search"
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s  [get]
+func (app *application) search%sHandler(w http.ResponseWriter, r *http.Request) {
+	pq := store.PaginatedQuery{
+		Limit: 20,
+		Page:  1,
+		Sort:  "desc",
+	}
+	if err := pq.Parse(r); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	if err := Validate.Struct(pq); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	// get pagination from store
+	models, err := app.store.%s.Search(ctx, pq)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+	if err := app.jsonResponse(w, http.StatusOK, models); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+
+// Update %s godoc
+//
+//	@Summary		Update %s
+//	@Description	Update %s
+//	@Tags			bpmn/%s
+//	@Accept			json
+//	@produce		json
+//	@Param			id		path		int												true	"ID from table"
+//	@Param			payload	body		Update%sPayload		true	"%s Payload"
+//	@Success		200		{object}	DataStore%sWrapper	"%s Updated"
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/{id}  [patch]
+func (app *application) update%sHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	var payload Update%sPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	user := GetUserFromContext(r)
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.get%s(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	variables := make(map[string]interface{})
+	variables["updated_by"] = map[string]interface{}{
+		"id":         user.ID,
+		"username":   user.Username,
+		"updated_at": time.Now().Unix(),
+	}
+
+	if payload.Variables != nil {
+		for k, v := range *payload.Variables {
+			variables[k] = v
+		}
+	}
+
+	if err := app.zeebeClient.UpdateProcessInstance(ctx, model.ProcessInstanceKey, variables); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.store.%s.Update(ctx, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// delete cache
+	app.cacheStorage.%s.Delete(ctx, model.ID)
+
+	if err := app.jsonResponse(w, http.StatusOK, model); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// GetProcessIncidents %s godoc
+//
+//	@Summary		GetProcessIncidents %s
+//	@Description	GetProcessIncidents %s
+//	@Tags			bpmn/%s
+//	@Accept			json
+//	@produce		json
+//	@Param			id				path		int		true	"ID from table"
+//	@Param			size			query		string	false	"Size 50"
+//	@Param			order			query		string	false	"Order DESC ASC"
+//
+// @Param			type			query		string	false	"Type USER_TASK"
+// @Param			state			query		string	false	"State ACTIVE"
+//
+//	@Param			sort			query		string	false	"Sort startDate"
+//	@Param			searchAfter		query		string	false	"SearchAfter 1731486859777,2251799814109407"
+//	@Param			searchBefore	query		string	false	"SearchBefore 1731486859777,2251799814109407"
+//	@Success		200	{string}	string	"%s GetProcessIncidents"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/bpmn/%s/{id}/history  [get]
+func (app *application) getIncidentsById%sHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	flowNodeQueryParams, err := getFlowNodeQueryParams(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if flowNodeQueryParams.Sort == "" {
+		flowNodeQueryParams.Sort = "creationTime"
+	}
+
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	model, err := app.get%s(ctx, id)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+	
+	jsonTemplate := %s
+{
+    "filter": {
+        "processInstanceKey": %s
+    }, 
+    "size": %s, 
+    "sort": [{"field": "%s", "order": "%s"}]
+    %s
+}%s
+
+	var searchAfterStr, searchBeforeStr string
+
+	if flowNodeQueryParams.SearchAfter != "" {
+		searchAfterStr = fmt.Sprintf(%s, "searchAfter": %s%s, flowNodeQueryParams.SearchAfter)
+	}
+
+	if flowNodeQueryParams.SearchBefore != "" {
+		searchBeforeStr = fmt.Sprintf(%s, "searchBefore": %s%s, flowNodeQueryParams.SearchBefore)
+	}
+
+	searchParams := searchAfterStr + searchBeforeStr
+
+	body := []byte(fmt.Sprintf(
+		jsonTemplate,
+		model.ProcessInstanceKey,
+		flowNodeQueryParams.Size,
+		flowNodeQueryParams.Sort,
+		flowNodeQueryParams.Order,
+		searchParams,
+	))
+
+	// get incidents from operate api rest api
+	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaOperateBaseUrl, V1IncidentUrl)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodPost,
+		url,
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	var jsonData interface{}
+	if err := json.Unmarshal(resp, &jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, jsonData); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+`,
+		moduleName, processName, "`", "`", processName, "`", "`",
+		processName, processName, processName, processName,
+		processName, processName,
+
+		processName, processName, processName, processName,
+		strings.ReplaceAll(tableName, " ", "_"), processName,
+		processName, processName, processName, processName, processName,
+
 		// cancel
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		strings.ReplaceAll(tableName, " ", "_"),
-		processName,
-		processName,
-		processName,
-		processName,
+		processName, processName, processName, processName,
+		processName, strings.ReplaceAll(tableName, " ", "_"),
+		processName, processName, processName, processName,
+
 		// get by id
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		strings.ReplaceAll(tableName, " ", "_"),
-		processName,
-		processName,
+		processName, processName, processName, processName, processName,
+		strings.ReplaceAll(tableName, " ", "_"), processName, processName,
 		// get
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
+		processName, processName, processName, processName, processName, processName,
 
 		// get history
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
+		processName, processName, processName, processName, processName,
+		strings.ReplaceAll(tableName, " ", "_"), processName, processName,
+		"`", "%d", "%s", "%s", "%s", "%s", "`", "`", "%s", "`",
+		"`", "%s", "`", "%s", "%s",
+
+		// search
+		processName, processName, processName, processName, processName,
 		strings.ReplaceAll(tableName, " ", "_"),
-		processName,
+		processName, processName,
 
-		processName,
+		// update
+		processName, processName, processName, processName, processName,
+		processName, processName, processName, strings.ReplaceAll(tableName, " ", "_"),
+		processName, processName, processName, processName, processName,
 
-		"`",
-		"%d",
-		"%s",
-		"%s",
-		"%s",
-		"%s",
-		"`",
-
-		"`",
-		"%s",
-		"`",
-
-		"`",
-		"%s",
-		"`",
-
-		"%s",
-		"%s",
+		// incidents
+		processName, processName, processName, processName, processName,
+		strings.ReplaceAll(tableName, " ", "_"), processName, processName,
+		"`", "%d", "%s", "%s", "%s", "%s", "`", "`", "%s", "`",
+		"`", "%s", "`", "%s", "%s",
 	)
 
 	err = os.WriteFile(filePathHandler, []byte(handlerCode), 0o644)
@@ -1625,23 +1991,10 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 	s.rdb.Del(ctx, cacheKey)
 }
 `,
-		moduleName,
-		processName,
-		processName,
-		processName,
-		processName,
-		processName,
-		"%v",
-		processName,
-
-		processName,
-		processName,
-		processName,
-		"%v",
-		processName,
-		processName,
-		processName,
-		"%v",
+		moduleName, processName, processName, processName,
+		processName, processName, "%v", processName,
+		processName, processName, processName, "%v",
+		processName, processName, processName, "%v",
 	)
 
 	err = os.WriteFile(filePathStoreCache, []byte(modelCacheCode), 0o644)
@@ -1655,11 +2008,11 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 		Create(context.Context, *%s) error
 		Delete(context.Context, int64) error
 		GetByID(context.Context, int64) (*%s, error)
+		Update(context.Context, *%s) error
+		Search(context.Context, PaginatedQuery) (map[string]interface{}, error)
 	}
 `,
-		processName,
-		processName,
-		processName,
+		processName, processName, processName, processName,
 	)
 	generateCodeConstructor := fmt.Sprintf(`
 		%s:   &%sStore{db},
@@ -1668,14 +2021,22 @@ func (s *%sStore) Delete(ctx context.Context, modelID int64) {
 	// edit file routes
 	generateCodeRoutes := fmt.Sprintf(`
 			r.Route("/%s", func(r chi.Router) {
+				r.Get("/", app.search%sTechnologyHandler)
 				r.Post("/", app.create%sHandler)
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", app.getById%sHandler)
 					r.Delete("/", app.cancel%sHandler)
+					r.Patch("/", app.update%sHandler)
 					r.Get("/history", app.getHistoryById%sHandler)
+					r.Get("/incidents", app.getIncidentsById%sHandler)
 				})
 			})	
-`, strings.ReplaceAll(tableName, " ", "_"), processName, processName, processName, processName)
+`,
+		strings.ReplaceAll(tableName, " ", "_"),
+		processName, processName,
+		processName, processName,
+		processName, processName, processName,
+	)
 
 	// edit file cache storage
 	generateCodeCacheStorage := fmt.Sprintf(`

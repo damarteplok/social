@@ -31,16 +31,26 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 
 func writeJSONError(w http.ResponseWriter, status int, message string) error {
 	type envelope struct {
-		Error string `json:"error"`
+		Message string `json:"error"`
+		Status  int    `json:"status"`
 	}
 
-	return writeJSON(w, status, &envelope{Error: message})
+	return writeJSON(w, status, &envelope{
+		Message: message,
+		Status:  status,
+	})
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
 	type envelope struct {
-		Data any `json:"data"`
+		Data    any    `json:"data"`
+		Message string `json:"message,omitempty"`
+		Status  int    `json:"status"`
 	}
 
-	return writeJSON(w, status, &envelope{Data: data})
+	return writeJSON(w, status, &envelope{
+		Data:    data,
+		Message: http.StatusText(status),
+		Status:  status,
+	})
 }

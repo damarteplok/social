@@ -7,19 +7,17 @@ import (
 )
 
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
-	// pagination, filters, sort
-	// feed?limit=20&offset=0
 	fq := store.PaginatedFeedQuery{
-		Limit:  20,
-		Offset: 0,
-		Sort:   "desc",
+		PaginatedQuery: store.PaginatedQuery{
+			Limit: 20,
+			Page:  1,
+			Sort:  "desc",
+		},
 	}
-	fq, err := fq.Parse(r)
-	if err != nil {
+	if err := fq.Parse(r); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-
 	if err := Validate.Struct(fq); err != nil {
 		app.badRequestResponse(w, r, err)
 		return

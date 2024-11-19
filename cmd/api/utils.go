@@ -22,8 +22,18 @@ func (app *application) handleRequestError(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func stringPtr(s string) *string {
+func StringPtr(s string) *string {
 	return &s
+}
+
+func GetPostFromCtx(r *http.Request) *store.Post {
+	post, _ := r.Context().Value(postCtx).(*store.Post)
+	return post
+}
+
+func GetUserFromContext(r *http.Request) *store.User {
+	user, _ := r.Context().Value(userCtx).(*store.User)
+	return user
 }
 
 func getFlowNodeQueryParams(r *http.Request) (*FlowNodeQueryParams, error) {

@@ -71,6 +71,44 @@ const docTemplate = `{
             }
         },
         "/authentication/user": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get user from token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Get user from token",
+                "responses": {
+                    "200": {
+                        "description": "User",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStoreUserWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "post": {
                 "description": "Register a user",
                 "consumes": [
@@ -116,11 +154,540 @@ const docTemplate = `{
                 }
             }
         },
+        "/bpmn/pembuatan_media_berita_technology": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Search PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "Search PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Limit 20",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page 1",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search string",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort desc",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Since desc",
+                        "name": "since",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Until desc",
+                        "name": "until",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology Search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "Create PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "description": "PembuatanMediaBeritaTechnology Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CreatePembuatanMediaBeritaTechnologyPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "PembuatanMediaBeritaTechnology Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStorePembuatanMediaBeritaTechnologyWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pembuatan_media_berita_technology/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetById PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "GetById PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology GetById",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "Cancel PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ProcessInstanceKey",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology Canceled",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "Update PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "PembuatanMediaBeritaTechnology Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.UpdatePembuatanMediaBeritaTechnologyPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology Updated",
+                        "schema": {
+                            "$ref": "#/definitions/main.DataStorePembuatanMediaBeritaTechnologyWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pembuatan_media_berita_technology/{id}/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetHistoryById PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "GetHistoryById PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size 50",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order DESC ASC",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Type USER_TASK",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "State ACTIVE",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort startDate",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchAfter 1731486859777,2251799814109407",
+                        "name": "searchAfter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchBefore 1731486859777,2251799814109407",
+                        "name": "searchBefore",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology GetHistoryById",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pembuatan_media_berita_technology/{id}/incidents": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetProcessIncidents PembuatanMediaBeritaTechnology",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanMediaBeritaTechnology"
+                ],
+                "summary": "GetProcessIncidents PembuatanMediaBeritaTechnology",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID from table",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size 50",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order DESC ASC",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Type USER_TASK",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "State ACTIVE",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort startDate",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchAfter 1731486859777,2251799814109407",
+                        "name": "searchAfter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchBefore 1731486859777,2251799814109407",
+                        "name": "searchBefore",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanMediaBeritaTechnology GetProcessIncidents",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/bpmn/pembuatanartikel/search": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "GetUserTaskActive PembuatanArtikel",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bpmn/PembuatanArtikel"
+                ],
+                "summary": "GetUserTaskActive PembuatanArtikel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Size 50",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order DESC ASC",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort creationTime",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "State CREATED",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchAfter 1731486859777,2251799814109407",
+                        "name": "searchAfter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchBefore 1731486859777,2251799814109407",
+                        "name": "searchBefore",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PembuatanArtikel GetUserTaskActive",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/camunda/incident/{incidentKey}/resolve": {
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Resolve Incident Bpmn Camunda",
@@ -166,10 +733,64 @@ const docTemplate = `{
             }
         },
         "/camunda/process-instance": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get Proses Instance from rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/process-instance"
+                ],
+                "summary": "Get Proses Instance from rest api",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Size 50",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchAfter 1731486859777,2251799814109407",
+                        "name": "searchAfter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "SearchBefore 1731486859777,2251799814109407",
+                        "name": "searchBefore",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "search process instance",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Create Proses Instance from rest api",
@@ -216,7 +837,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Cancel Proses Instance from rest api",
@@ -261,7 +882,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "CRUD Store And Handler from Payload",
@@ -308,7 +929,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Deploy Only Bpmn Camunda by Name In Folder Resources",
@@ -355,7 +976,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Deploy Bpmn Camunda by Name In Folder Resources And Create CRUD in Store And Handler File",
@@ -398,11 +1019,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/camunda/resource/operate/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get Information operate statistics camunda from rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/process-instance"
+                ],
+                "summary": "Get Information operate statistics camunda from rest api",
+                "responses": {
+                    "200": {
+                        "description": "search process instance",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/camunda/resource/{processDefinitionKey}/delete": {
             "delete": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Delete Bpmn Camunda",
@@ -451,7 +1108,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Search TaskList from rest api v1",
@@ -498,7 +1155,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BasicAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Search User Task from rest api v2 must enabled in camunda-platform config first",
@@ -958,6 +1615,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "main.CreatePembuatanMediaBeritaTechnologyPayload": {
+            "type": "object",
+            "properties": {
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "main.CreatePostPayload": {
             "type": "object",
             "required": [
@@ -1087,6 +1755,20 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.DataStorePembuatanMediaBeritaTechnologyWrapper": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/store.PembuatanMediaBeritaTechnology"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "integer"
                 }
             }
@@ -1365,6 +2047,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main.UpdatePembuatanMediaBeritaTechnologyPayload": {
+            "type": "object",
+            "properties": {
+                "variables": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "main.UpdatePostPayload": {
             "type": "object",
             "properties": {
@@ -1437,6 +2130,47 @@ const docTemplate = `{
                     "$ref": "#/definitions/store.User"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.PembuatanMediaBeritaTechnology": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "process_definition_key": {
+                    "type": "integer"
+                },
+                "process_instance_key": {
+                    "type": "integer"
+                },
+                "resource_name": {
+                    "type": "string"
+                },
+                "task_definition_id": {
+                    "type": "string"
+                },
+                "task_state": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                },
+                "version": {
                     "type": "integer"
                 }
             }

@@ -40,7 +40,10 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", app.healthCheckHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Get("/health", app.healthCheckHandler)
+		})
 
 		r.With(app.BasicAuthMiddleware()).
 			Get("/debug/vars", expvar.Handler().ServeHTTP)
@@ -52,6 +55,10 @@ func (app *application) mount() http.Handler {
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
 			r.Post("/token", app.createTokenHandler)
+			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+				r.Get("/user", app.getTokenUserHandler)
+			})
 		})
 
 		// Auth routes
@@ -84,52 +91,30 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-		r.With(app.BasicAuthMiddleware()).Route("/camunda", func(r chi.Router) {
+		r.Route("/camunda", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Route("/resource", func(r chi.Router) {
 				r.Post("/deploy", app.deployOnlyCamundaHandler)
 				r.Post("/crud", app.crudCamundaHandler)
 				r.Post("/deploy-crud", app.deployCamundaHandler)
 				r.Post("/{processDefinitionKey}/delete", app.deleteCamundaHandler)
-			})
-			r.Route("/job", func(r chi.Router) {
-				r.Post("/activate", func(w http.ResponseWriter, r *http.Request) {})
-				r.Route("/{jobKey}", func(r chi.Router) {
-					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
-					r.Patch("/", func(w http.ResponseWriter, r *http.Request) {})
-					r.Post("/fail", func(w http.ResponseWriter, r *http.Request) {})
-					r.Post("/error", func(w http.ResponseWriter, r *http.Request) {})
-				})
+				r.Get("/operate/statistics", app.operateStatisticsHandler)
 			})
 			r.Route("/incident", func(r chi.Router) {
 				r.Route("/{incidentKey}", func(r chi.Router) {
 					r.Post("/resolve", app.resolveIncidentHandler)
 				})
 			})
-			r.Route("/usertask", func(r chi.Router) {
-				r.Route("/{usertaskKey}", func(r chi.Router) {
-					r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
-					r.Patch("/", func(w http.ResponseWriter, r *http.Request) {})
-					r.Post("/assignment", func(w http.ResponseWriter, r *http.Request) {})
-					r.Post("/unassignment", func(w http.ResponseWriter, r *http.Request) {})
-				})
-			})
 			r.Route("/process-instance", func(r chi.Router) {
 				r.Post("/", app.createProsesInstance)
+				r.Get("/", app.searchProcessInstance)
 				r.Route("/{processinstanceKey}", func(r chi.Router) {
 					r.Post("/cancel", app.cancelProcessInstance)
 				})
 			})
-			r.Route("/message", func(r chi.Router) {
-				r.Patch("/publish", func(w http.ResponseWriter, r *http.Request) {})
-				r.Patch("/correlate", func(w http.ResponseWriter, r *http.Request) {})
-			})
 			r.Route("/user-task", func(r chi.Router) {
 				r.Post("/", app.searchTaskListHandler)
 				r.Post("/search", app.searchUserTaskHandler)
-				r.Route("/{userTaskKey}", func(r chi.Router) {
-					// r.Post("/complete", app.completeTaskHandler)
-					// r.Post("/assign", app.assignTaskHandler)
-				})
 			})
 		})
 
@@ -137,7 +122,29 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 			// GENERATE ROUTES API
 
+			r.Route("/pembuatan_media_berita_technology", func(r chi.Router) {
+				r.Get("/", app.searchPembuatanMediaBeritaTechnologyHandler)
+				r.Post("/", app.createPembuatanMediaBeritaTechnologyHandler)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", app.getByIdPembuatanMediaBeritaTechnologyHandler)
+					r.Delete("/", app.cancelPembuatanMediaBeritaTechnologyHandler)
+					r.Patch("/", app.updatePembuatanMediaBeritaTechnologyHandler)
+					r.Get("/history", app.getHistoryByIdPembuatanMediaBeritaTechnologyHandler)
+					r.Get("/incidents", app.getIncidentsByIdPembuatanMediaBeritaTechnologyHandler)
+				})
+			})
+
 			// GENERATE USER TASK ROUTES API
+
+			r.Route("/approvingartikel", func(r chi.Router) {
+			})
+
+			r.Route("/reviewingartikel", func(r chi.Router) {
+			})
+
+			r.Route("/pembuatanartikel", func(r chi.Router) {
+				r.Get("/", app.getUserTaskActivePembuatanArtikelHandler)
+			})
 		})
 	})
 

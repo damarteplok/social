@@ -20,6 +20,7 @@ type ZeebeCamunda interface {
 	StartWorkflow(ctx context.Context, processDefinitionKey int64, variables map[string]interface{}) (*pb.CreateProcessInstanceResponse, error)
 	CancelWorkflow(context.Context, int64) error
 	StartWorker(jobType, nameWorker string, handler worker.JobHandler) (worker.JobWorker, error)
+	UpdateProcessInstance(ctx context.Context, processInstanceKey int64, variables map[string]interface{}) error
 	Close() error
 }
 
@@ -27,14 +28,7 @@ type Client struct {
 	client zbc.Client
 }
 
-type StartWorkFlowResponse struct {
-	ProcessDefinitionKey int64  `json:"processDefinitionKey"`
-	BpmnProcessId        string `json:"bpmnProcessId"`
-	Version              int32  `json:"version"`
-	ProcessInstanceKey   int64  `json:"processInstanceKey"`
-	TenantId             string `json:"tenantId"`
-}
-
+// bpmn types
 type FormDefinition struct {
 	FormID string `xml:"formId,attr"`
 }
@@ -91,6 +85,7 @@ type BPMNDocument struct {
 	Processes []BPMNProcess `xml:"process"`
 }
 
+// zeebe client rest
 type TokenManager struct {
 	clientID     string
 	clientSecret string
@@ -106,7 +101,7 @@ type ZeebeClientRest struct {
 	zeebeAddr    string
 }
 
-// form id
+// form id types
 type FormComponent struct {
 	Label       string `json:"label"`
 	Type        string `json:"type"`
@@ -116,7 +111,6 @@ type FormComponent struct {
 		Required bool `json:"required"`
 	} `json:"validate"`
 }
-
 type Form struct {
 	Components []FormComponent `json:"components"`
 }
