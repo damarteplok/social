@@ -266,13 +266,18 @@ type UserWithToken struct {
 }
 
 type FlowNodeQueryParams struct {
-	Size         string
-	Order        string
-	Sort         string
-	SearchAfter  string
-	SearchBefore string
-	Type         string
-	State        string
+	Size                     string
+	Order                    string
+	Sort                     string
+	SearchAfter              string
+	SearchBefore             string
+	Type                     string
+	State                    string
+	BpmnProcessId            string
+	ProcessDefinitionKey     string
+	ParentProcessInstanceKey string
+	StartDate                string
+	EndDate                  string
 }
 
 type TaskListQueryParams struct {

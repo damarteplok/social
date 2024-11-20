@@ -1031,6 +1031,35 @@ paths:
       summary: Delete Bpmn Camunda
       tags:
       - camunda/resource
+  /camunda/resource/{processDefinitionKey}/xml:
+    get:
+      consumes:
+      - application/json
+      description: Get TEXT/XML from rest api
+      parameters:
+      - description: Process Definition Key
+        in: path
+        name: processDefinitionKey
+        required: true
+        type: integer
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: search process instance
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get TEXT/XML from rest api
+      tags:
+      - camunda/resource
   /camunda/resource/crud:
     post:
       consumes:
@@ -1144,7 +1173,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get Information operate statistics camunda from rest api
       tags:
-      - camunda/process-instance
+      - camunda/resource
   /camunda/user-task:
     post:
       consumes:

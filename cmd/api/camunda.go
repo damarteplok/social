@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,16 +15,17 @@ import (
 )
 
 const (
-	StateCreated         = "CREATED"
-	StateCompleted       = "COMPLETED"
-	StateCanceled        = "CANCELED"
-	StateFailed          = "FAILED"
-	ResourceUrl          = "/v2/resources"
-	ProcessInstanceUrl   = "/v2/process-instances"
-	V1TasklistUrl        = "/v1/tasks"
-	V1FlowNodeUrl        = "/v1/flownode-instances"
-	V1ProcessInstanceUrl = "/v1/process-instances"
-	V1IncidentUrl        = "/v1/incidents"
+	StateCreated           = "CREATED"
+	StateCompleted         = "COMPLETED"
+	StateCanceled          = "CANCELED"
+	StateFailed            = "FAILED"
+	ResourceUrl            = "/v2/resources"
+	ProcessInstanceUrl     = "/v2/process-instances"
+	V1TasklistUrl          = "/v1/tasks"
+	V1FlowNodeUrl          = "/v1/flownode-instances"
+	V1ProcessInstanceUrl   = "/v1/process-instances"
+	V1ProcessDefinitionUrl = "/v1/process-definitions"
+	V1IncidentUrl          = "/v1/incidents"
 )
 
 // Deploy godoc
@@ -528,10 +530,37 @@ func (app *application) searchProcessInstance(w http.ResponseWriter, r *http.Req
 
 	jsonTemplate := `
 {
+	"filter": {
+		%s
+    }, 
     "size": %s
     %s
 }`
+	var bpmnProcessIdStr, processDefinitionKeyStr, parentProcessInstanceKeyStr, startDateStr, endDateStr, stateStr string
+	if flowNodeQueryParams.BpmnProcessId != "" {
+		bpmnProcessIdStr = fmt.Sprintf(`, "bpmnProcessId": "%s"`, flowNodeQueryParams.BpmnProcessId)
+	}
+	if flowNodeQueryParams.ProcessDefinitionKey != "" {
+		processDefinitionKeyStr = fmt.Sprintf(`, "processDefinitionKey": %s`, flowNodeQueryParams.ProcessDefinitionKey)
+	}
+	if flowNodeQueryParams.ParentProcessInstanceKey != "" {
+		parentProcessInstanceKeyStr = fmt.Sprintf(`, "parentProcessInstanceKey": %s`, flowNodeQueryParams.ParentProcessInstanceKey)
+	}
+	if flowNodeQueryParams.StartDate != "" {
+		startDateStr = fmt.Sprintf(`, "startDate": "%s"`, flowNodeQueryParams.StartDate)
+	}
+	if flowNodeQueryParams.EndDate != "" {
+		endDateStr = fmt.Sprintf(`, "endDate": "%s"`, flowNodeQueryParams.EndDate)
+	}
+	if flowNodeQueryParams.State != "" {
+		stateStr = fmt.Sprintf(`, "state": "%s"`, flowNodeQueryParams.State)
+	}
 
+	filterForm := bpmnProcessIdStr + processDefinitionKeyStr + parentProcessInstanceKeyStr + startDateStr + endDateStr + stateStr
+
+	if filterForm != "" {
+		filterForm = filterForm[2:]
+	}
 	var searchAfterStr, searchBeforeStr string
 
 	if flowNodeQueryParams.SearchAfter != "" {
@@ -546,9 +575,12 @@ func (app *application) searchProcessInstance(w http.ResponseWriter, r *http.Req
 
 	body := []byte(fmt.Sprintf(
 		jsonTemplate,
+		filterForm,
 		flowNodeQueryParams.Size,
 		searchParams,
 	))
+
+	log.Println(string(body))
 
 	url := fmt.Sprintf("%s%s/search", app.config.camundaRest.camundaOperateBaseUrl, V1ProcessInstanceUrl)
 	resp, err := app.zeebeClientRest.SendRequest(
@@ -636,6 +668,56 @@ func (app *application) operateStatisticsHandler(w http.ResponseWriter, r *http.
 	}); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+}
+
+// GetTEXT/XML godoc
+//
+//	@Summary		Get TEXT/XML from rest api
+//	@Description	Get TEXT/XML from rest api
+//	@Tags			camunda/resource
+//	@Accept			json
+//	@produce		text/xml
+//
+//	@Param			processDefinitionKey	path		int		true	"Process Definition Key"
+//
+//	@Success		200						{string}	string	"search process instance"
+//	@Failure		400						{object}	error
+//	@Failure		500						{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/resource/{processDefinitionKey}/xml  [get]
+func (app *application) xmlCamundaHandler(w http.ResponseWriter, r *http.Request) {
+	processDefinitionKey, err := strconv.ParseInt(chi.URLParam(r, "processDefinitionKey"), 10, 64)
+	if err != nil || processDefinitionKey < 1 {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	ctx := r.Context()
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	url := fmt.Sprintf("%s%s/%d/xml",
+		app.config.camundaRest.camundaOperateBaseUrl,
+		V1ProcessDefinitionUrl,
+		processDefinitionKey,
+	)
+	log.Println(url)
+	resp, err := app.zeebeClientRest.SendRequest(
+		ctx,
+		http.MethodGet,
+		url,
+		nil,
+	)
+	if err != nil {
+		app.handleRequestError(w, r, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/xml")
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(resp); err != nil {
+		app.internalServerError(w, r, err)
 	}
 }
 

@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import { PageContainer } from '@toolpad/core/PageContainer';
 import Typography from '@mui/material/Typography';
 import {
 	DashboardLayout,
@@ -44,9 +43,7 @@ export default function Layout() {
 				sidebarFooter: SidebarFooter,
 			}}
 		>
-			<PageContainer>
-				<Outlet />
-			</PageContainer>
+			<Outlet />
 		</DashboardLayout>
 	);
 }

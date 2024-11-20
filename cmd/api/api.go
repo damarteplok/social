@@ -98,6 +98,7 @@ func (app *application) mount() http.Handler {
 				r.Post("/crud", app.crudCamundaHandler)
 				r.Post("/deploy-crud", app.deployCamundaHandler)
 				r.Post("/{processDefinitionKey}/delete", app.deleteCamundaHandler)
+				r.Get("/{processDefinitionKey}/xml", app.xmlCamundaHandler)
 				r.Get("/operate/statistics", app.operateStatisticsHandler)
 			})
 			r.Route("/incident", func(r chi.Router) {

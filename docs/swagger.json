@@ -1026,7 +1026,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "camunda/process-instance"
+                    "camunda/resource"
                 ],
                 "summary": "Get Information operate statistics camunda from rest api",
                 "responses": {
@@ -1087,6 +1087,51 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/resource/{processDefinitionKey}/xml": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get TEXT/XML from rest api",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/xml"
+                ],
+                "tags": [
+                    "camunda/resource"
+                ],
+                "summary": "Get TEXT/XML from rest api",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Process Definition Key",
+                        "name": "processDefinitionKey",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "search process instance",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {}
                     },
                     "500": {

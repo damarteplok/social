@@ -21,11 +21,13 @@ interface ResourceCamunda {
 interface CamundaState {
 	resources: ResourceCamunda | null;
 	loading: boolean;
+	error: string | null;
 }
 
 const initialState: CamundaState = {
 	resources: null,
 	loading: false,
+	error: null,
 };
 
 export const camundaSlice = createSlice({
@@ -43,14 +45,17 @@ export const camundaSlice = createSlice({
 		builder
 			.addCase(fetchResources.pending, (state) => {
 				state.loading = true;
+				state.error = null;
 			})
 			.addCase(fetchResources.fulfilled, (state, action) => {
 				state.resources = action.payload;
 				state.loading = false;
+				state.error = null;
 			})
-			.addCase(fetchResources.rejected, (state) => {
+			.addCase(fetchResources.rejected, (state, action) => {
 				state.resources = null;
 				state.loading = false;
+				state.error = action.payload as string;
 			});
 	},
 });

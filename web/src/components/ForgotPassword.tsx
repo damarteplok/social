@@ -61,6 +61,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 						autoFocus
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
+						size="small"
 					/>
 					{error && <Alert severity='error'>{error}</Alert>}
 					{success && (

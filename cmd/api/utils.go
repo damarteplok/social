@@ -53,10 +53,13 @@ func getFlowNodeQueryParams(r *http.Request) (*FlowNodeQueryParams, error) {
 	}
 
 	sort := r.URL.Query().Get("sort")
-
 	typeStr := r.URL.Query().Get("type")
-
 	state := r.URL.Query().Get("state")
+	bpmnProcessId := r.URL.Query().Get("bpmnProcessId")
+	processDefinitionKey := r.URL.Query().Get("processDefinitionKey")
+	parentProcessInstanceKey := r.URL.Query().Get("parentProcessInstanceKey")
+	startDate := r.URL.Query().Get("startDate")
+	endDate := r.URL.Query().Get("endDate")
 
 	searchAfter := r.URL.Query().Get("searchAfter")
 	if searchAfter != "" {
@@ -69,13 +72,18 @@ func getFlowNodeQueryParams(r *http.Request) (*FlowNodeQueryParams, error) {
 	}
 
 	return &FlowNodeQueryParams{
-		Size:         size,
-		Order:        order,
-		Sort:         sort,
-		SearchAfter:  searchAfter,
-		SearchBefore: searchBefore,
-		Type:         typeStr,
-		State:        state,
+		Size:                     size,
+		Order:                    order,
+		Sort:                     sort,
+		SearchAfter:              searchAfter,
+		SearchBefore:             searchBefore,
+		Type:                     typeStr,
+		State:                    state,
+		BpmnProcessId:            bpmnProcessId,
+		ProcessDefinitionKey:     processDefinitionKey,
+		ParentProcessInstanceKey: parentProcessInstanceKey,
+		StartDate:                startDate,
+		EndDate:                  endDate,
 	}, nil
 }
 
