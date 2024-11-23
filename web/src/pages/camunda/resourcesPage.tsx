@@ -105,7 +105,7 @@ const ResourcesPage: React.FC = () => {
 					onDelete={handleDelete}
 					onApplyFilter={handleApplyFilter}
 					showFilter
-					showSearch
+					showSearch={false}
 					customContent={
 						<FilterResourceComponent filter={filter} setFilter={setFilter} />
 					}
@@ -114,7 +114,7 @@ const ResourcesPage: React.FC = () => {
 					totalRows={resources?.total || 0}
 					onPageChange={setPage}
 					onRowsPerPageChange={setRowsPerPage}
-					showActions={true}
+					showActions={false}
 					showView={true}
 					showEdit={true}
 					showDelete={true}

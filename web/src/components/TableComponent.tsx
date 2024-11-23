@@ -169,7 +169,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
 				))
 			) : (
 				<TableContainer sx={{ overflowX: 'auto' }}>
-					<Table stickyHeader aria-label='sticky table' size='small'>
+					<Table stickyHeader aria-label='sticky table' size='medium'>
 						<TableHead>
 							<TableRow>
 								{showNumber && ( // Add this block

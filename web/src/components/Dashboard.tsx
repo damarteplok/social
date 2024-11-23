@@ -172,6 +172,7 @@ const Dashboard = () => {
 													<AccordionDetails>
 														<Typography variant='body2'>
 															active: {subProcess.activeInstancesCount}{' '}
+															<br />
 															incidents:{' '}
 															{subProcess.instancesWithActiveIncidentsCount}
 														</Typography>

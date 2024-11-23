@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/camunda-community-hub/zeebe-client-go/v8/pkg/pb"
@@ -13,6 +14,7 @@ import (
 
 // TODO: DEFINE IN INTERFACE HERE
 type ZeebeCamunda interface {
+	DeployProcessDefinitionFromFiles(file *os.File, formResources []*os.File) ([]*pb.ProcessMetadata, []BPMNProcess, error)
 	DeployProcessDefinition(resourceName string, formResources []string) ([]*pb.ProcessMetadata, []BPMNProcess, error)
 	GenerateCRUDHandlers(processMetadata *pb.ProcessMetadata) error
 	GenerateCRUDUserTaskServiceTaskHandler(bpmnProcess *[]BPMNProcess) error

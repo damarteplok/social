@@ -724,6 +724,143 @@
                 }
             }
         },
+        "/camunda/minio/deploy-crud": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deploy Bpmn Camunda by Name From MINIO And Create CRUD in Store And Handler File",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/minio"
+                ],
+                "summary": "Deploy Bpmn Camunda and Create CRUD in Store And Handler File",
+                "parameters": [
+                    {
+                        "description": "Deploy Bpmn Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.DeployBpmnPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/minio/upload": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload Bpmn Camunda by Name In Folder Resources",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/minio"
+                ],
+                "summary": "Upload Bpmn Camunda",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File Upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/camunda/minio/upload-multiple": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload Multiple Bpmn Camunda by Name In Folder Resources",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "camunda/minio"
+                ],
+                "summary": "Upload Multiple Bpmn Camunda",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Files Upload",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/camunda/process-instance": {
             "get": {
                 "security": [
@@ -743,6 +880,42 @@
                 ],
                 "summary": "Get Proses Instance from rest api",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bpmn Process Id",
+                        "name": "bpmnProcessId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Process Definition Key",
+                        "name": "processDefinitionKey",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Parent Process Instance Key",
+                        "name": "parentProcessInstanceKey",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start Date",
+                        "name": "startDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Date",
+                        "name": "endDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "State",
+                        "name": "state",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Size 50",

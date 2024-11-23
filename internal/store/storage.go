@@ -14,6 +14,7 @@ var (
 	ErrConflict          = errors.New("resource already exist")
 	ErrDuplicateEmail    = errors.New("a user with that email already exist")
 	ErrDuplicateUsername = errors.New("a user with that username already exist")
+	ErrTypeNotAllowed    = errors.New("file extension not allowed")
 	QueryTimeoutDuration = time.Second * 5
 )
 

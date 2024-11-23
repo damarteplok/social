@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -15,6 +19,8 @@ import (
 )
 
 const (
+	BucketBPMN             = "bpmn"
+	BucketForm             = "form"
 	StateCreated           = "CREATED"
 	StateCompleted         = "COMPLETED"
 	StateCanceled          = "CANCELED"
@@ -57,6 +63,249 @@ func (app *application) deployCamundaHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	if err := app.zeebeClient.GenerateCRUDUserTaskServiceTaskHandler(&bpmnProcess); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	processes := make([]map[string]interface{}, len(response))
+	for i, process := range response {
+		if err := app.zeebeClient.GenerateCRUDHandlers(process); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		processes[i] = map[string]interface{}{
+			"processDefinitionKey": process.ProcessDefinitionKey,
+			"bpmnProcessId":        process.BpmnProcessId,
+			"version":              process.Version,
+		}
+	}
+
+	jsonResponse := map[string]interface{}{
+		"processes": processes,
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, jsonResponse); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// upload upload godoc
+//
+//	@Summary		Upload Bpmn Camunda
+//	@Description	Upload Bpmn Camunda by Name In Folder Resources
+//	@Tags			camunda/minio
+//	@Accept			multipart/form-data
+//	@produce		json
+//	@Param			file	formData	file	true	"File Upload"
+//	@Success		201		{string}	string
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/minio/upload  [post]
+func (app *application) uploadCamundaHandler(w http.ResponseWriter, r *http.Request) {
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	defer file.Close()
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	tempFile, err := os.CreateTemp("", header.Filename)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+	defer os.Remove(tempFile.Name())
+
+	if _, err := io.Copy(tempFile, file); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	uploadInfo, err := app.minioClient.UploadBpmnOrForm(ctx, tempFile, header.Filename)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrTypeNotAllowed):
+			app.badRequestResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, map[string]interface{}{
+		"bucket":   uploadInfo.Bucket,
+		"Key":      uploadInfo.Key,
+		"Location": uploadInfo.Location,
+	}); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// uploadMultiple godoc
+//
+//	@Summary		Upload Multiple Bpmn Camunda
+//	@Description	Upload Multiple Bpmn Camunda by Name In Folder Resources
+//	@Tags			camunda/minio
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			files	formData	file	true	"Files Upload" collectionFormat(multi)
+//	@Success		201		{string}	string
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/minio/upload-multiple [post]
+func (app *application) uploadMultipleCamundaHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	files := r.MultipartForm.File["files"]
+	if len(files) == 0 {
+		app.badRequestResponse(w, r, errors.New("no files found"))
+		return
+	}
+
+	// check files type
+	for _, fileHeader := range files {
+		if filepath.Ext(fileHeader.Filename) != ".bpmn" && filepath.Ext(fileHeader.Filename) != ".form" {
+			app.badRequestResponse(w, r, errors.New("file type not allowed"))
+			return
+		}
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	defer cancel()
+
+	var uploadInfos []map[string]interface{}
+	for _, fileHeader := range files {
+		file, err := fileHeader.Open()
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		defer file.Close()
+
+		tempFile, err := os.CreateTemp("", fileHeader.Filename)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		defer os.Remove(tempFile.Name())
+
+		if _, err := io.Copy(tempFile, file); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		uploadInfo, err := app.minioClient.UploadBpmnOrForm(ctx, tempFile, fileHeader.Filename)
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrTypeNotAllowed):
+				app.badRequestResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		uploadInfos = append(uploadInfos, map[string]interface{}{
+			"bucket":   uploadInfo.Bucket,
+			"Key":      uploadInfo.Key,
+			"Location": uploadInfo.Location,
+		})
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, uploadInfos); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+// Deploy godoc
+//
+//	@Summary		Deploy Bpmn Camunda and Create CRUD in Store And Handler File
+//	@Description	Deploy Bpmn Camunda by Name From MINIO And Create CRUD in Store And Handler File
+//	@Tags			camunda/minio
+//	@Accept			json
+//	@produce		json
+//	@Param			payload	body		DeployBpmnPayload	true	"Deploy Bpmn Payload"
+//	@Success		201		{string}	string
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/camunda/minio/deploy-crud  [post]
+func (app *application) getObjectFromMinioThanUseItHandler(w http.ResponseWriter, r *http.Request) {
+	var payload DeployBpmnPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	fileResource, err := app.minioClient.GetObject(ctx, BucketBPMN, payload.ResourceName)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+	defer fileResource.Close()
+
+	var formFiles []*os.File
+	var tmpFiles []*os.File
+	if payload.FormResources != nil {
+		for _, formResource := range payload.FormResources {
+			formFile, err := app.minioClient.GetObject(ctx, BucketForm, formResource)
+			if err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+			defer formFile.Close()
+
+			tmpFile, err := os.CreateTemp("", "form-*.tmp")
+			if err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+			defer tmpFile.Close()
+
+			if _, err := io.Copy(tmpFile, formFile); err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+
+			formFiles = append(formFiles, tmpFile)
+			tmpFiles = append(tmpFiles, tmpFile)
+		}
+	}
+
+	response, bpmnProcess, err := app.zeebeClient.DeployProcessDefinitionFromFiles(fileResource, formFiles)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	for _, tmpFile := range tmpFiles {
+		os.Remove(tmpFile.Name())
 	}
 
 	if err := app.zeebeClient.GenerateCRUDUserTaskServiceTaskHandler(&bpmnProcess); err != nil {
@@ -508,12 +757,20 @@ func (app *application) searchUserTaskHandler(w http.ResponseWriter, r *http.Req
 //	@Tags			camunda/process-instance
 //	@Accept			json
 //	@produce		json
-//	@Param			size			query		string	false	"Size 50"
-//	@Param			searchAfter		query		string	false	"SearchAfter 1731486859777,2251799814109407"
-//	@Param			searchBefore	query		string	false	"SearchBefore 1731486859777,2251799814109407"
-//	@Success		200				{string}	string	"search process instance"
-//	@Failure		400				{object}	error
-//	@Failure		500				{object}	error
+//
+//	@Param			bpmnProcessId				query		string	false	"Bpmn Process Id"
+//	@Param			processDefinitionKey		query		string	false	"Process Definition Key"
+//	@Param			parentProcessInstanceKey	query		string	false	"Parent Process Instance Key"
+//	@Param			startDate					query		string	false	"Start Date"
+//	@Param			endDate						query		string	false	"End Date"
+//	@Param			state						query		string	false	"State"
+//
+//	@Param			size						query		string	false	"Size 50"
+//	@Param			searchAfter					query		string	false	"SearchAfter 1731486859777,2251799814109407"
+//	@Param			searchBefore				query		string	false	"SearchBefore 1731486859777,2251799814109407"
+//	@Success		200							{string}	string	"search process instance"
+//	@Failure		400							{object}	error
+//	@Failure		500							{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/camunda/process-instance  [get]
 func (app *application) searchProcessInstance(w http.ResponseWriter, r *http.Request) {

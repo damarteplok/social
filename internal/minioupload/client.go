@@ -5,8 +5,10 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/damarteplok/social/internal/store"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/tags"
@@ -59,6 +61,40 @@ func (m *Client) UploadFile(ctx context.Context, bucketName, objectName string, 
 	return &uploadInfo, nil
 }
 
+func (m *Client) UploadBpmnOrForm(ctx context.Context, file *os.File, fileName string) (*minio.UploadInfo, error) {
+	// validate file extension
+	// if file extension is .form, upload to form bucket
+	if filepath.Ext(fileName) != ".form" && filepath.Ext(fileName) != ".bpmn" {
+		return nil, store.ErrTypeNotAllowed
+	}
+
+	var bucketName string
+	if filepath.Ext(fileName) == ".form" {
+		bucketName = "form"
+	} else {
+		bucketName = "bpmn"
+	}
+
+	// Check if bucket exists
+	exists, err := m.ExistBucket(ctx, bucketName)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		err = m.CreateBucket(ctx, bucketName, minio.MakeBucketOptions{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// upload file using Uploadfile
+	uploadInfo, err := m.UploadFile(ctx, bucketName, fileName, file, -1, minio.PutObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return uploadInfo, nil
+}
+
 func (m *Client) DownloadUrlFile(ctx context.Context, bucketName, objectName string, expires time.Duration) (*url.URL, error) {
 	reqParams := make(url.Values)
 	reqParams.Set("response-content-disposition", "attachment; filename="+objectName)
@@ -71,4 +107,19 @@ func (m *Client) DownloadUrlFile(ctx context.Context, bucketName, objectName str
 
 func (m *Client) RemoveFile(ctx context.Context, bucketName, objectName string, opt minio.RemoveObjectOptions) error {
 	return m.client.RemoveObject(ctx, bucketName, objectName, opt)
+}
+
+func (m *Client) GetObject(ctx context.Context, bucketName, objectName string) (*os.File, error) {
+	file, err := os.Create(objectName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	err = m.client.FGetObject(ctx, bucketName, objectName, file.Name(), minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }

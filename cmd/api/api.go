@@ -101,6 +101,11 @@ func (app *application) mount() http.Handler {
 				r.Get("/{processDefinitionKey}/xml", app.xmlCamundaHandler)
 				r.Get("/operate/statistics", app.operateStatisticsHandler)
 			})
+			r.Route("/minio", func(r chi.Router) {
+				r.Post("/upload", app.uploadCamundaHandler)
+				r.Post("/upload-multiple", app.uploadMultipleCamundaHandler)
+				r.Post("/deploy-crud", app.getObjectFromMinioThanUseItHandler)
+			})
 			r.Route("/incident", func(r chi.Router) {
 				r.Route("/{incidentKey}", func(r chi.Router) {
 					r.Post("/resolve", app.resolveIncidentHandler)

@@ -4,7 +4,7 @@ import Dashboard from '../components/Dashboard';
 const DashboardPage = () => {
 	return (
 		<PageContainer title='Monitoring'>
-			<Dashboard />;
+			<Dashboard />
 		</PageContainer>
 	);
 };

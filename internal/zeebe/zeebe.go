@@ -82,6 +82,61 @@ func (c *Client) CancelWorkflow(ctx context.Context, processInstanceKey int64) e
 	return nil
 }
 
+// DeployProcessDefinition deploys a process definition from file
+func (z *Client) DeployProcessDefinitionFromFiles(file *os.File, formResources []*os.File) ([]*pb.ProcessMetadata, []BPMNProcess, error) {
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get file info: %w", err)
+	}
+	fileSize := fileInfo.Size()
+	fileContent := make([]byte, fileSize)
+	_, err = file.Read(fileContent)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read file content: %w", err)
+	}
+	bpmnProcess, err := unMarshalBpmn(fileContent)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal xml: %w", err)
+	}
+	command := z.client.NewDeployResourceCommand().AddResource(fileContent, file.Name())
+
+	for _, formResource := range formResources {
+		formFileInfo, err := formResource.Stat()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get form file info: %w", err)
+		}
+		formFileSize := formFileInfo.Size()
+		formContent := make([]byte, formFileSize)
+		_, err = formResource.Read(formContent)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to read form file content: %w", err)
+		}
+		command = command.AddResource(formContent, formResource.Name())
+	}
+
+	ctx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFn()
+
+	resource, err := command.Send(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(resource.GetDeployments()) < 1 {
+		return nil, nil, errors.New("failed to deploy model; nothing was deployed")
+	}
+
+	var processes []*pb.ProcessMetadata
+	for _, deployment := range resource.GetDeployments() {
+		process := deployment.GetProcess()
+		if process != nil {
+			processes = append(processes, process)
+		}
+	}
+
+	return processes, bpmnProcess, nil
+}
+
 // DeployProcessDefinition deploys a process definition.
 func (z *Client) DeployProcessDefinition(resourceName string, formResources []string) ([]*pb.ProcessMetadata, []BPMNProcess, error) {
 	definition, err := MustReadFile(resourceName)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
 	Box,
 	Button,
@@ -7,8 +7,11 @@ import {
 	Typography,
 	Alert,
 } from '@mui/material';
-import axiosInstance from '../utils/axiosInstance';
-
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../slices/store/rootReducer';
+import { forgotPassword } from '../slices/modules/forgotPassword/thunk';
 interface ForgotPasswordProps {
 	onSuccess: () => void;
 	onBack: () => void;
@@ -18,23 +21,30 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 	onSuccess,
 	onBack,
 }) => {
-	const [email, setEmail] = useState('');
-	const [error, setError] = useState<string | null>(null);
-	const [success, setSuccess] = useState(false);
+	const dispatch = useDispatch<any>();
+	const { success, error } = useSelector(
+		(state: RootState) => state.forgotPassword
+	);
 
-	const handleSubmit = async (event: React.FormEvent) => {
-		event.preventDefault();
-		setError(null);
-		setSuccess(false);
-
-		try {
-			await axiosInstance.post('/authentication/forgot-password', { email });
-			setSuccess(true);
-			onSuccess();
-		} catch (err) {
-			setError('Failed to send reset password email. Please try again.');
-		}
-	};
+	const formik = useFormik({
+		enableReinitialize: true,
+		initialValues: {
+			email: '',
+		},
+		validationSchema: Yup.object({
+			email: Yup.string().email('Invalid email address').required('Required'),
+		}),
+		onSubmit: async (values, { setSubmitting }) => {
+			try {
+				setSubmitting(true);
+				dispatch(forgotPassword(values.email));
+				setSubmitting(false);
+				onSuccess();
+			} catch (err) {
+				setSubmitting(false);
+			}
+		},
+	});
 
 	return (
 		<Container maxWidth='sm'>
@@ -49,7 +59,21 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 				<Typography component='h1' variant='h5'>
 					Forgot Password
 				</Typography>
-				<Box component='form' onSubmit={handleSubmit} sx={{ mt: 1 }}>
+				<Box
+					component='form'
+					onSubmit={formik.handleSubmit}
+					sx={{ mt: 1, minWidth: 350 }}
+				>
+					{error && (
+						<Alert severity='error' sx={{ width: '100%' }}>
+							{error}
+						</Alert>
+					)}
+					{success && (
+						<Alert sx={{ width: '100%' }} severity='success'>
+							Reset password email sent successfully.
+						</Alert>
+					)}
 					<TextField
 						margin='normal'
 						required
@@ -58,22 +82,19 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 						label='Email Address'
 						name='email'
 						autoComplete='email'
-						autoFocus
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						size="small"
+						value={formik.values.email}
+						onChange={formik.handleChange}
+						onBlur={formik.handleBlur}
+						size='small'
+						error={formik.touched.email && Boolean(formik.errors.email)}
+						helperText={formik.touched.email && formik.errors.email}
 					/>
-					{error && <Alert severity='error'>{error}</Alert>}
-					{success && (
-						<Alert severity='success'>
-							Reset password email sent successfully.
-						</Alert>
-					)}
 					<Button
 						type='submit'
 						fullWidth
 						variant='contained'
 						sx={{ mt: 3, mb: 2 }}
+						disabled={formik.isSubmitting}
 					>
 						Send Reset Link
 					</Button>

@@ -58,9 +58,6 @@ const PageToolbarResource: React.FC = () => {
 			<Button startIcon={<SchemaIcon />} color='inherit' onClick={handleOpen}>
 				BPMN
 			</Button>
-			<Button startIcon={<FileDownloadIcon />} color='inherit'>
-				Export
-			</Button>
 			<Modal open={open} onClose={handleClose}>
 				<Box sx={{ ...modalStyle }}>
 					{bpmnXML && (

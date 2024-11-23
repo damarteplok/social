@@ -905,12 +905,125 @@ paths:
       summary: Resolve Incident Bpmn Camunda
       tags:
       - camunda/incident
+  /camunda/minio/deploy-crud:
+    post:
+      consumes:
+      - application/json
+      description: Deploy Bpmn Camunda by Name From MINIO And Create CRUD in Store
+        And Handler File
+      parameters:
+      - description: Deploy Bpmn Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.DeployBpmnPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Deploy Bpmn Camunda and Create CRUD in Store And Handler File
+      tags:
+      - camunda/minio
+  /camunda/minio/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload Bpmn Camunda by Name In Folder Resources
+      parameters:
+      - description: File Upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Bpmn Camunda
+      tags:
+      - camunda/minio
+  /camunda/minio/upload-multiple:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload Multiple Bpmn Camunda by Name In Folder Resources
+      parameters:
+      - description: Files Upload
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Multiple Bpmn Camunda
+      tags:
+      - camunda/minio
   /camunda/process-instance:
     get:
       consumes:
       - application/json
       description: Get Proses Instance from rest api
       parameters:
+      - description: Bpmn Process Id
+        in: query
+        name: bpmnProcessId
+        type: string
+      - description: Process Definition Key
+        in: query
+        name: processDefinitionKey
+        type: string
+      - description: Parent Process Instance Key
+        in: query
+        name: parentProcessInstanceKey
+        type: string
+      - description: Start Date
+        in: query
+        name: startDate
+        type: string
+      - description: End Date
+        in: query
+        name: endDate
+        type: string
+      - description: State
+        in: query
+        name: state
+        type: string
       - description: Size 50
         in: query
         name: size

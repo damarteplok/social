@@ -19,6 +19,8 @@ type MinioApi interface {
 	UploadFile(ctx context.Context, bucketName, objectName string, file *os.File, size int64, opt minio.PutObjectOptions) (*minio.UploadInfo, error)
 	DownloadUrlFile(ctx context.Context, bucketName, objectName string, expires time.Duration) (*url.URL, error)
 	RemoveFile(ctx context.Context, bucketName, objectName string, opt minio.RemoveObjectOptions) error
+	UploadBpmnOrForm(ctx context.Context, file *os.File, fileName string) (*minio.UploadInfo, error)
+	GetObject(ctx context.Context, bucketName, objectName string) (*os.File, error)
 }
 
 type Client struct {
