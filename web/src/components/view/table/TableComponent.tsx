@@ -37,9 +37,9 @@ interface TableComponentProps {
 		format?: (value: any) => string;
 	}>;
 	rows: Array<any>;
-	onView?: (id: string) => void;
-	onEdit?: (id: string) => void;
-	onDelete?: (id: string) => void;
+	onView?: (row: any) => void;
+	onEdit?: (row: any) => void;
+	onDelete?: (row: any) => void;
 	onApplyFilter?: (filter: any) => void;
 	onNextPage?: () => void;
 	onPrevPage?: () => void;
@@ -161,6 +161,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
 			{loading ? (
 				Array.from({ length: 10 }).map((_, index) => (
 					<Skeleton
+						key={'skeleton' + index}
 						variant='rectangular'
 						width='100%'
 						height={40}
@@ -169,10 +170,10 @@ const TableComponent: React.FC<TableComponentProps> = ({
 				))
 			) : (
 				<TableContainer sx={{ overflowX: 'auto' }}>
-					<Table stickyHeader aria-label='sticky table' size='medium'>
+					<Table stickyHeader aria-label='sticky table' size='medium' >
 						<TableHead>
 							<TableRow>
-								{showNumber && ( // Add this block
+								{showNumber && (
 									<TableCell key={'number'} style={{ minWidth: 50 }}>
 										No
 									</TableCell>
@@ -217,7 +218,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
 							) : (
 								filteredRows.map((row, index) => (
 									<TableRow hover tabIndex={-1} key={`${index}-${row.id}`}>
-										{showNumber && ( // Add this block
+										{showNumber && (
 											<TableCell key={`number-${index}`}>
 												{page * rowsPerPage + index + 1}
 											</TableCell>
@@ -240,17 +241,17 @@ const TableComponent: React.FC<TableComponentProps> = ({
 												}}
 											>
 												{showView && (
-													<IconButton onClick={() => onView(row.id)}>
+													<IconButton onClick={() => onView(row)}>
 														<ViewIcon />
 													</IconButton>
 												)}
 												{showEdit && (
-													<IconButton onClick={() => onEdit(row.id)}>
+													<IconButton onClick={() => onEdit(row)}>
 														<EditIcon />
 													</IconButton>
 												)}
 												{showDelete && (
-													<IconButton onClick={() => onDelete(row.id)}>
+													<IconButton onClick={() => onDelete(row)}>
 														<DeleteIcon />
 													</IconButton>
 												)}

@@ -1,5 +1,5 @@
 import React from 'react';
-import ForgotPassword from '../components/ForgotPassword';
+import ForgotPassword from '../components/page/ForgotPassword';
 import { useNavigate } from 'react-router-dom';
 
 const ForgotPasswordPage: React.FC = () => {

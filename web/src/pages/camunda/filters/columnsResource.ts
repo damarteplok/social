@@ -26,3 +26,15 @@ export const columnsResources = [
 		},
 	},
 ];
+
+export interface RowResource {
+	bpmnProcessId: string;
+	endDate: string;
+	incident: boolean;
+	key: number;
+	processDefinitionKey: number;
+	processVersion: number;
+	startDate: string;
+	state: string;
+	tenantId: string;
+}

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { setAuthToken } from './utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,16 +6,26 @@ import { setSession } from './slices/modules/session/sessionSlice';
 import { createTheme } from '@mui/material/styles';
 import { AppProvider } from '@toolpad/core/react-router-dom';
 import CloudIcon from '@mui/icons-material/Cloud';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
-import FeedbackIcon from '@mui/icons-material/Feedback';
 import { SessionContext, type Navigation } from '@toolpad/core/AppProvider';
 import { RootState } from './slices/store/rootReducer';
+import HomeIcon from '@mui/icons-material/Home';
 
 const NAVIGATION: Navigation = [
 	{
-		title: 'Dashboard',
+		title: 'Home',
+		icon: <HomeIcon />,
+	},
+	{
+		kind: 'divider',
+	},
+	{
+		kind: 'header',
+		title: 'Monitoring',
+	},
+	{
+		segment: 'monitoring',
+		title: 'Monitoring',
 		icon: <MonitorHeartIcon />,
 	},
 	{
@@ -30,33 +39,20 @@ const NAVIGATION: Navigation = [
 		segment: 'camunda',
 		title: 'Camunda',
 		icon: <CloudIcon />,
-		children: [
-			{
-				segment: 'resources',
-				title: 'Resources',
-				icon: <DashboardIcon />,
-				pattern: 'resources',
-			},
-			{
-				segment: 'process-instance',
-				title: 'Process Instance',
-				icon: <AssignmentTurnedInIcon />,
-				pattern: 'process-instance',
-			},
-			{
-				segment: 'user-task',
-				title: 'User Task',
-				icon: <AssignmentIndIcon />,
-				pattern: 'user-task',
-			},
-			{
-				segment: 'incidents',
-				title: 'Incidents',
-				icon: <FeedbackIcon />,
-				pattern: 'incident',
-			},
-		],
 	},
+	// {
+	// 	segment: 'camunda',
+	// 	title: 'Camunda',
+	// 	icon: <CloudIcon />,
+	// 	children: [
+	// 		{
+	// 			segment: 'resources',
+	// 			title: 'Resources',
+	// 			icon: <DashboardIcon />,
+	// 			pattern: 'resources',
+	// 		},
+	// 	],
+	// },
 ];
 
 const customTheme = createTheme({

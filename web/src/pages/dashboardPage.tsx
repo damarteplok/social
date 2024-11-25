@@ -1,5 +1,5 @@
 import { PageContainer } from '@toolpad/core';
-import Dashboard from '../components/Dashboard';
+import Dashboard from '../components/page/Dashboard';
 
 const DashboardPage = () => {
 	return (

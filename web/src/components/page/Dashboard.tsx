@@ -10,8 +10,8 @@ import {
 } from '@mui/material';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDashboard } from '../slices/modules/dashboard/thunk';
-import { RootState } from '../slices/store/rootReducer';
+import { fetchDashboard } from '../../slices/modules/dashboard/thunk';
+import { RootState } from '../../slices/store/rootReducer';
 import { useNotifications } from '@toolpad/core/useNotifications';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -77,8 +77,10 @@ const Dashboard = () => {
 							</>
 						) : (
 							<>
-								<Typography variant='h5'>Running</Typography>
-								<Typography variant='h4'>
+								<Typography variant='h5' color='info'>
+									Running
+								</Typography>
+								<Typography variant='h4' color='info'>
 									{dashboard?.dashboard.count.running}
 								</Typography>
 							</>
@@ -99,8 +101,10 @@ const Dashboard = () => {
 							</>
 						) : (
 							<>
-								<Typography variant='h5'>Active</Typography>
-								<Typography variant='h4'>
+								<Typography variant='h5' color='success'>
+									Active
+								</Typography>
+								<Typography variant='h4' color='success'>
 									{dashboard?.dashboard.count.active}
 								</Typography>
 							</>
@@ -121,8 +125,10 @@ const Dashboard = () => {
 							</>
 						) : (
 							<>
-								<Typography variant='h5'>Incidents</Typography>
-								<Typography variant='h4'>
+								<Typography variant='h5' color='error'>
+									Incidents
+								</Typography>
+								<Typography variant='h4' color='error'>
 									{dashboard?.dashboard.count.incident}
 								</Typography>
 							</>
@@ -144,7 +150,9 @@ const Dashboard = () => {
 							</>
 						) : (
 							<>
-								<Typography variant='h5' sx={{mb: 2}}>Process Instance by Name</Typography>
+								<Typography variant='h5' sx={{ mb: 2 }}>
+									Process Instance by Name
+								</Typography>
 
 								{dashboard?.dashboard.processStats.map((process) => (
 									<Accordion key={process.bpmnProcessId}>
@@ -156,9 +164,15 @@ const Dashboard = () => {
 											{process.processName}
 										</AccordionSummary>
 										<AccordionDetails>
-											<Typography variant='body2' sx={{mb: 2}}>
-												active: {process.activeInstancesCount} incidents:{' '}
-												{process.instancesWithActiveIncidentsCount}
+											<Typography
+												variant='body2'
+												sx={{ mb: 2 }}
+												color='success'
+											>
+												active: {process.activeInstancesCount}
+											</Typography>
+											<Typography variant='body2' sx={{ mb: 2 }} color='error'>
+												incidents: {process.instancesWithActiveIncidentsCount}
 											</Typography>
 											{process.processes.map((subProcess) => (
 												<Accordion key={subProcess.processId}>
@@ -170,9 +184,10 @@ const Dashboard = () => {
 														{subProcess.name} (Version: {subProcess.version})
 													</AccordionSummary>
 													<AccordionDetails>
-														<Typography variant='body2'>
-															active: {subProcess.activeInstancesCount}{' '}
-															<br />
+														<Typography variant='body2' color='success'>
+															active: {subProcess.activeInstancesCount}
+														</Typography>
+														<Typography variant='body2' color='error'>
 															incidents:{' '}
 															{subProcess.instancesWithActiveIncidentsCount}
 														</Typography>

@@ -3,12 +3,12 @@ import BpmnModeler from 'bpmn-js/lib/NavigatedViewer';
 
 interface BpmnViewerProps {
 	xml: string;
-	taskCounts: Record<string, number>; // Task counts keyed by task ID
+	taskCounts?: Record<string, number>;
 }
 
 const BpmnViewerComponent: React.FC<BpmnViewerProps> = ({
 	xml,
-	taskCounts,
+	taskCounts = {},
 }) => {
 	const viewerRef = useRef<HTMLDivElement>(null);
 

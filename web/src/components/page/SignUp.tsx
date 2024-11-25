@@ -16,8 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../slices/store/rootReducer';
-import { registerUser } from '../slices/modules/auth/thunk';
+import { RootState } from '../../slices/store/rootReducer';
+import { registerUser } from '../../slices/modules/auth/thunk';
 
 interface SignUpProps {
 	onSuccess: () => void;

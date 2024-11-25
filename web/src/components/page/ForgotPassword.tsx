@@ -10,8 +10,8 @@ import {
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../slices/store/rootReducer';
-import { forgotPassword } from '../slices/modules/forgotPassword/thunk';
+import { RootState } from '../../slices/store/rootReducer';
+import { forgotPassword } from '../../slices/modules/forgotPassword/thunk';
 interface ForgotPasswordProps {
 	onSuccess: () => void;
 	onBack: () => void;

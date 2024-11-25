@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Layout from './layouts/dashboard';
-import OrdersPage from './pages/orders.tsx';
 import SignInPage from './pages/signIn';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -13,13 +12,12 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import PrivateRoute from './components/PrivateRoute';
 import ForgotPasswordPage from './pages/forgotPasswordPage.tsx';
 import SignUpPage from './pages/signUpPage.tsx';
 import DashboardPage from './pages/dashboardPage.tsx';
 import NotFoundPage from './pages/notFoundPage.tsx';
 import UnauthorizedPage from './pages/unAuthorizedPage.tsx';
-import ResourcesPage from './pages/camunda/resourcesPage.tsx';
+import CamundaPage from './pages/camunda/camundaPage.tsx';
 
 const router = createBrowserRouter([
 	{
@@ -31,40 +29,21 @@ const router = createBrowserRouter([
 				children: [
 					{
 						path: '',
-						Component: () => (
-							<PrivateRoute>
-								<DashboardPage />
-							</PrivateRoute>
-						),
+						Component: DashboardPage,
+					},
+					{
+						path: 'monitoring',
+						Component: DashboardPage,
 					},
 					{
 						path: 'camunda',
-						children: [
-							{
-								path: 'resources',
-								Component: () => (
-									<PrivateRoute>
-										<ResourcesPage />
-									</PrivateRoute>
-								),
-							},
-							{
-								path: 'process-instance',
-								Component: () => (
-									<PrivateRoute>
-										<OrdersPage />
-									</PrivateRoute>
-								),
-							},
-							{
-								path: 'user-task',
-								Component: () => (
-									<PrivateRoute>
-										<OrdersPage />
-									</PrivateRoute>
-								),
-							},
-						],
+						Component: CamundaPage,
+						// children: [
+						// 	{
+						// 		path: '',
+						// 		Component: ResourcesPage,
+						// 	},
+						// ],
 					},
 				],
 			},
@@ -81,7 +60,7 @@ const router = createBrowserRouter([
 				Component: ForgotPasswordPage,
 			},
 			{
-				path: '/unauthorized', // Add route for UnauthorizedPage
+				path: '/unauthorized',
 				element: <UnauthorizedPage />,
 			},
 			{
